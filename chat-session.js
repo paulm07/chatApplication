@@ -2,14 +2,15 @@
  * Chat Session Data is stored here.
  */
 module.exports = {
-	// Holds each individual player
-	players: [],
-	// Holds player count
+	// Holds each individual user
+	users: [],
+	// Holds user count
 	count: 0,
 	// Holds the logs for each individual channel
-	channels: [],
+	// This list is loaded with the first three main items.
+	channel: [{channelName: "##Main", currentUsers: [], log: ""}, {channelName: "##FIU", currentUsers: [], log: ""}, {channelName: "##WebAppDevelopment", currentUsers: [], log: ""}],
 	// Holds channel access list
-	channelAccessList: [];
+	channelAccessList: []
 	// Holds list of administrators
 
 
@@ -17,6 +18,6 @@ module.exports = {
 	//log: "",
 	 //Deprecated. Player nicks will be handled directly by server
 	//playerNicks: {}
-	*/
+
 
 }

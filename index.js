@@ -39,7 +39,7 @@ io.on('connection', function(socket){
 
 
 
-  /* HANDLES USERNAME REGISTRATION */
+  /* START USERNAME REGISTRATION */
   //socket is for the client
   socket.on('new user', function(data, callback){
 
@@ -53,9 +53,18 @@ io.on('connection', function(socket){
       nicknames.push(socket.nickname);
 
 
-      // Registers User to Channel //
-      
 
+      chatSession.users[socket.nickname] = {
+        nickname: socket.nickname,
+        //tabs: 0,
+        socket: socket
+      };
+
+
+      // Registers User to Channel //
+
+      // Will send channelList to users REMEMBER TO COMMENT OUT
+      socket.emit('updateChannelList', chatSession.channel)
       updateNicknames();
 
       //nickname becomes nickname plus random number
@@ -64,15 +73,23 @@ io.on('connection', function(socket){
       callback(true);
       socket.nickname = data; // storing nickname of each user within socket itself
       nicknames.push(socket.nickname);
+
+      /* chatSession will hold user by username */
+      chatSession.users[socket.nickname] = {
+        nickname: socket.nickname,
+        //tabs: 0,
+        socket: socket
+      };
+
+      // Will send channelList to users REMEMBER TO COMMENT OUT
+      socket.emit('updateChannelList', chatSession.channel)
+      // End of chat session adding user
       updateNicknames();
     }
 
 
 
-    /* HANDLES USERNAME REGISTRATION */
-
-
-
+    /* END USERNAME REGISTRATION */
 
 
 
@@ -104,6 +121,8 @@ function updateNicknames(){
 socket.on('send message', function(data){
   if(!commands.isCommand(data))
   {
+
+    // CREATE LOOP FOR CHANNEL USERLIST
     io.sockets.emit('new message', {msg: data, nick: socket.nickname});
     //chatSession.log()
   }

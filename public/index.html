@@ -17,9 +17,9 @@
 
         <div class="topNav">
           <ul class="channels">
-            <li><a href="#Main">#Main</a></li>
-            <li><a href="#FIU">#FIU</a></li>
-            <li><a href="#WebApplicationDevelopment">#WebApplicationDevelopment</a></li>
+            <li><a href="#Main">##Main</a></li>
+            <li><a href="#FIU">##FIU</a></li>
+            <li><a href="#WebAppDevelopment">##WebAppDevelopment</a></li>
           </ul>
         </div>
 
@@ -28,11 +28,8 @@
           <section class="chat-panel chat-panel__users">
             <div class="chat-list users">
             </div>
-            <div class="chat-ui user-search">
-              <select>
-                <option></option>
-                <option></option>
-                <option></option>
+            <div class="chat-ui channel-search">
+              <select id="channels">
               </select>
             </div>
           </section>
@@ -87,7 +84,7 @@
 
 
 
- // FINISH  SOON//
+ // FINISH  SOON //
 
     $nickFrom.submit(function(e){
       e.preventDefault();
@@ -151,6 +148,21 @@
           $users.html(html);
         });
 
+
+        // Updates the channel list for users
+        socket.on('updateChannelList', function(channelList){
+          // START CHANNEL UPDATE
+
+          console.log(channelList);
+          for(var line in channelList)
+          {
+            var channel = document.createElement("option");
+            channel.innerHTML = channelList[line].channelName;
+            $('#channels').append(channel);
+          }
+
+          // END CHANNEL UPDATE
+        });
 
     $messageForm.submit(function(e){
       e.preventDefault();
