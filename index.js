@@ -5,6 +5,10 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+// Holds session object for entire session of server's existence (persistent data)
+var chatSession = require('./chat-session');
+// Holds commands object to handle user's command requests
+var commands = require('./chat-commands')(io, chatSession);
 nicknames = [];
 
 http.listen(3000, function(){
@@ -25,16 +29,33 @@ app.get('/', function(req, res){
   });
 });*/
 
+
+
+// FINISH SOON //
+
 //To send the nickname
 //io is for the server
 io.on('connection', function(socket){
+
+
+
+  /* HANDLES USERNAME REGISTRATION */
   //socket is for the client
   socket.on('new user', function(data, callback){
+
+
+
+
     if (nicknames.indexOf(data) != -1){
       /* Gives users a random nickname if the username is already chosen */
       callback(false);
-      socket.nickname = data + Math.floor((Math.random() * 1000) + 1000);;
+      socket.nickname = data + Math.floor((Math.random() * 1000) + 1000);
       nicknames.push(socket.nickname);
+
+
+      // Registers User to Channel //
+      
+
       updateNicknames();
 
       //nickname becomes nickname plus random number
@@ -45,17 +66,55 @@ io.on('connection', function(socket){
       nicknames.push(socket.nickname);
       updateNicknames();
     }
+
+
+
+    /* HANDLES USERNAME REGISTRATION */
+
+
+
+
+
+
 });
 
+
+
+
+// FINISH SOON
+
+
+
+
+/**
+ * Handles updating nickname list for all users
+ */
 function updateNicknames(){
   io.sockets.emit('usernames', nicknames);
 }
 
-//To send message to FORM (chat room)
+
+
+
+
+
+/**
+ * Handles sending information to form
+ */
 socket.on('send message', function(data){
-  io.sockets.emit('new message', {msg: data, nick: socket.nickname});
+  if(!commands.isCommand(data))
+  {
+    io.sockets.emit('new message', {msg: data, nick: socket.nickname});
+    //chatSession.log()
+  }
+  else {
+
+  }
   //TO BROADCAST socket.BROADCAST.emit('new message', data);
 });
+
+
+
 
 socket.on('disconnect', function(data){
   if(!socket.nickname) return;
