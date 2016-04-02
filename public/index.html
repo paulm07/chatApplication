@@ -84,10 +84,15 @@
 
     })
 
+
+
+
+ // FINISH  SOON//
+
     $nickFrom.submit(function(e){
       e.preventDefault();
-      socket.emit('new user', $nickBox.val(), function(data){
-        if(data){
+      socket.emit('new user', $nickBox.val(), function(callback){
+        if(callback){
           $('#nickWrap').hide();
           $('.topNav').show();
           $('.chat').show();
@@ -99,7 +104,44 @@
           }
       });
       $nickBox.val('');
-    });
+
+
+
+
+    }
+
+
+// UUID handling
+/*
+    // Server will call connection function once io() is called which will force
+    // local browser to create UUID. This will then be used by the server to uniquely
+    // identify the socket by UUID.
+
+    // UUID can be used to determine Admin and identify specific people
+
+    socket.on('connection', function(){
+      //
+      if (!(uuid = localStorage.getItem('uuid'))) {
+        var randomlyGeneratedUID = Math.random().toString(36).substring(3, 16) + +new Date;
+        // UUID will be stored locally
+        localStorage.setItem('uuid', randomlyGeneratedUID);
+    })
+    // Will emit UUID to
+    socket.emit('registerUUID', uuid + "," + nickNameRegistered);
+
+*/
+
+  );
+
+
+  // FINISH SOON //
+
+
+
+
+
+
+
 
         socket.on('usernames', function(data){
           var html = '';
@@ -123,6 +165,7 @@
         txtWritten.innerHTML = '<b>' + data.nick + ': </b>' + data.msg;
         $('.messages').append(txtWritten);
       });
+
 
       </script>
   </body>
