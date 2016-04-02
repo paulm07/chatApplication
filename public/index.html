@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Chat Room</title>
+    <link rel="stylesheet" href="/css/main.css">
+  </head>
+  <body>
+    <div id="nickWrap">
+      <p>Username:</p>
+      <!-- <p id="nickError"></p>-->
+      <form id="setNick">
+        <input id="nickname" /><button>Submit</button>
+      </form>
+    </div>
+
+
+
+        <div class="topNav">
+          <ul class="channels">
+            <li><a href="#Main">#Main</a></li>
+            <li><a href="#FIU">#FIU</a></li>
+            <li><a href="#WebApplicationDevelopment">#WebApplicationDevelopment</a></li>
+          </ul>
+        </div>
+
+
+        <main class="chat">
+          <section class="chat-panel chat-panel__users">
+            <div class="chat-list users">
+            </div>
+            <div class="chat-ui user-search">
+              <select>
+                <option></option>
+                <option></option>
+                <option></option>
+              </select>
+            </div>
+          </section>
+          <section class="chat-panel chat-panel__messages">
+            <div class="chat-list messages">
+            </div>
+            <form id="messageForm">
+              <div class="chat-ui message-box">
+                <input class="messageInput" type="text" placeholder="Type your message here">
+                <button>Send</button>
+              </div>
+          </form>
+          </section>
+        </main>
+
+        <!--
+          <div id="chatWrap">
+            <div id="chat"></div>
+            <ul id="messages"></ul>
+            <form id="send-message" action="">
+              <input id="m" autocomplete="off" /><button>Send</button>
+            </form>
+          </div>
+          <div id="users"></div>
+        -->
+
+<!-- BODY ENDS -->
+
+<!-- loading socket io to client
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io();
+    </script> -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+    var socket = io();
+    var $nickFrom = $('#setNick');
+    var $nickBox = $('#nickname');
+    var $users = $('.users');
+    var $messageForm = $('#messageForm');
+    var $messageBox = $('.messageInput');
+    var $chat = $('#chat');
+
+    $(function(){
+      $('#nickWrap').show();
+      $('.topNav').hide();
+      $('.chat').hide();
+
+    })
+
+    $nickFrom.submit(function(e){
+      e.preventDefault();
+      socket.emit('new user', $nickBox.val(), function(data){
+        if(data){
+          $('#nickWrap').hide();
+          $('.topNav').show();
+          $('.chat').show();
+        }
+          else{
+            $('#nickWrap').hide();
+            $('.topNav').show();
+            $('.chat').show();
+          }
+      });
+      $nickBox.val('');
+    });
+
+        socket.on('usernames', function(data){
+          var html = '';
+          for (i=0; i < data.length; i++){
+            html += data[i] + '<br/>'
+          }
+          $users.html(html);
+        });
+
+
+    $messageForm.submit(function(e){
+      e.preventDefault();
+      socket.emit('send message', $messageBox.val());
+      $messageBox.val('');
+      //return false;
+      });
+
+      socket.on('new message', function(data){
+        //$chat.append('<b>' + data.nick + ': </b>' + data.msg + "<br/>");
+        var txtWritten = document.createElement("article");
+        txtWritten.innerHTML = '<b>' + data.nick + ': </b>' + data.msg;
+        $('.messages').append(txtWritten);
+      });
+
+      </script>
+  </body>
+</html>

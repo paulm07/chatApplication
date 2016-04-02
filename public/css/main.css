@@ -1,0 +1,86 @@
+body {
+  margin: 0;
+  background: gray;
+  min-height: 100vh;
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  flex-direction: column; }
+
+header,
+footer {
+  background: white;
+  height: 3em; }
+
+button,
+input,
+select {
+  border: 0;
+  margin: 0;
+  display: inline-block;
+  paddding: 0;
+  height: 3em;
+  -webkit-box-flex: 1;
+  flex: 1; }
+
+button {
+  width: 200px; }
+
+main {
+  -webkit-box-flex: 1;
+  flex: 1; }
+
+
+
+.chat {
+  display: -webkit-box;
+  display: flex; }
+  .chat-panel {
+    display: -webkit-box;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    flex-direction: column; }
+    .chat-panel__users {
+      background: orangered;
+      width: 200px; }
+    .chat-panel__messages {
+      background: orange;
+      -webkit-box-flex: 1;
+      flex: 1; }
+  .chat-ui {
+    display: -webkit-box;
+    display: flex; }
+  .chat-list {
+    -webkit-box-flex: 1;
+    flex: 1; }
+
+
+.topNav{
+  position: relative;
+  top: 0px;
+}
+.channels{
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #333;
+}
+
+.channels li{
+  float: left;
+}
+
+.channels li a{
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+.channels li a:hover{
+  background-color: #111;
+}
