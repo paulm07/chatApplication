@@ -8,7 +8,7 @@ module.exports = {
 	count: 0,
 	// Holds the logs for each individual channel
 	// This list is loaded with the first three main items.
-	channel: [{channelName: "##Main", currentUsers: [], log: ""}, {channelName: "##FIU", currentUsers: [], log: ""}, {channelName: "##WebAppDevelopment", currentUsers: [], log: ""}],
+	channel: {},
 	// Holds channel access list
 	channelAccessList: []
 	// Holds list of administrators

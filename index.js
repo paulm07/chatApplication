@@ -38,10 +38,30 @@ app.get('/', function(req, res){
 io.on('connection', function(socket){
 
 
+  // Handles initialization of server to add SysOP and initial Channels when first user logs in
+
+
+  if(chatSession.count == 0)
+  {
+    // Once sysOP logs in with correct password, socket of user which logged
+    // as sysOP will be set as sysOP's socket
+    chatSession.users["sysop"] = {
+      nickname: socket.sysop,
+      //tabs: 0,
+      socket: null
+    };
+
+    // Initilizes main system chat rooms
+    chatSession.channel["##Main"] = {currentUsers: ["sysop"], log: ""};
+    chatSession.channel["##FIU"] = {currentUsers: [], log: ""};
+    chatSession.channel["##WebAppDevelopment"] = {currentUsers: [], log: ""};
+  }
 
   /* START USERNAME REGISTRATION */
   //socket is for the client
   socket.on('new user', function(data, callback){
+
+
 
 
 
@@ -63,10 +83,13 @@ io.on('connection', function(socket){
 
       // Registers User to Channel //
 
+
       // Will send channelList to users REMEMBER TO COMMENT OUT
       socket.emit('updateChannelList', chatSession.channel)
-      updateNicknames();
 
+
+
+      updateNicknames();
       //nickname becomes nickname plus random number
     }
     else{
@@ -83,6 +106,8 @@ io.on('connection', function(socket){
 
       // Will send channelList to users REMEMBER TO COMMENT OUT
       socket.emit('updateChannelList', chatSession.channel)
+      // Increases chat count with new registration
+      chatSession.count++;
       // End of chat session adding user
       updateNicknames();
     }
@@ -138,6 +163,7 @@ socket.on('send message', function(data){
 socket.on('disconnect', function(data){
   if(!socket.nickname) return;
   nicknames.splice(nicknames.indexOf(socket.nickname), 1);
+  chatSession.count--;
   updateNicknames();
 });
 });
