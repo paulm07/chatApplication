@@ -133,7 +133,10 @@
 
   // FINISH SOON //
 
-
+        // Handles clearing the messages
+        socket.on('clear', function(){
+          $('messages').innerHTML = "";
+        });
 
 
         // Handles command errors when user inputs erroneous command
@@ -164,10 +167,24 @@
         })
 
 
+        // // Updates the channel list for users
+        // socket.on('updateChannelList', function(channelList){
+        //   // START CHANNEL UPDATE
+        //
+        //   console.log(channelList);
+        //   for(var line in channelList)
+        //   {
+        //     var channel = document.createElement("option");
+        //     channel.innerHTML = line;
+        //     $('#channels').append(channel);
+        //   }
+        //
+        //   // END CHANNEL UPDATE
+        // });
+
         // Updates the channel list for users
         socket.on('updateChannelList', function(channelList){
           // START CHANNEL UPDATE
-
           console.log(channelList);
           for(var line in channelList)
           {
@@ -175,9 +192,27 @@
             channel.innerHTML = line;
             $('#channels').append(channel);
           }
-
           // END CHANNEL UPDATE
         });
+
+
+        // Updates chatlog
+        socket.on('updateChatLog', function(chatLog){
+          socket.emit('clear');
+
+          var splitMessage = chatLog.split("\n");
+          //console.log(splitMessage);
+
+          for(var line in splitMessage)
+          {
+            //console.log(splitMessage[line]);
+            var txtWritten = document.createElement("article");
+            txtWritten.innerHTML = splitMessage[line];
+            $('.messages').append(txtWritten);
+          }
+
+        });
+
 
         socket.on('usernames', function(data){
           var html = '';
@@ -196,6 +231,7 @@
       });
 
       socket.on('new message', function(data){
+        console.log(data);
         //$chat.append('<b>' + data.nick + ': </b>' + data.msg + "<br/>");
         var txtWritten = document.createElement("article");
         txtWritten.innerHTML = '<b>' + data.nick + ': </b>' + data.msg;

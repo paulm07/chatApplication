@@ -50,6 +50,12 @@ var commands = {
 		numArgs: 2,
 		handler: function(args, io, chatSession, user)
 		{
+			console.log(args[0]);
+			if(args[0] != 'channel'){ // WILL SHOOT OFF ERROR IF USER DID NOT INCLUDE CHANNEL KEYWORD
+			user.socket.emit('commandError');
+		}
+			else{
+
 			if(args[1] in chatSession.channels){ // WILL ASSUME USER HAS CHOSE TO GO INTO PUBLIC CHANNEL AND WILL SWITCH THEM
 				if(chatSession.channels[args[1]].accessType == "public"){
 					io.socket.emit('switchUsersChannel', args[1], user);
@@ -57,7 +63,7 @@ var commands = {
 				else { // WILL ASSUME USER HAS CHOSEN TO GO INTO A PRIVATE CHANNEL
 					if(user.nickname in chatSession.channels[args[1]].accessList)
 					{
-						io.socket.emit('switchUsersChannel', args[1], user);
+						io.socket.emit('switchUsersChannel', user, args[1]);
 					}
 					else {
 						user.socket.emit('channelError', "forbiddenChannel");
@@ -69,6 +75,7 @@ var commands = {
 				user.socket.emit('channelError', 'invalidChannel');
 			}
 		}
+	}
 	},
 }
 

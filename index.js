@@ -45,28 +45,35 @@ io.on('connection', function(socket){
   {
     // Once sysOP logs in with correct password, socket of user which logged
     // as sysOP will be set as sysOP's socket
-    chatSession.users["sysop"] = {
+    chatSession.users["sysOP"] = {
       nickname: "sysOP",
       //tabs: 0,
       accessLevel: 0,
-      socket: null
+      socket: null,
+      currentChannel: "##Main"
 
     };
 
     // Initilizes main system chat rooms once the first user logs in
-    chatSession.channels["##Main"] = {accessLevel: 0, accessType: "public", accessList: ["sysop"], currentUsers: ["sysop"], log: ""};
-    chatSession.channels["##FIU"] = {accessLevel: 0, accessType: "public", accessList: ["sysop"], currentUsers: [], log: ""};
-    chatSession.channels["##WebAppDevelopment"] = {accessLevel: 0, accessType: "public", accessList: ["sysop"], currentUsers: [], log: ""};
+    chatSession.channels["##Main"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: ""};
+    chatSession.channels["##FIU"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: ""};
+    chatSession.channels["##WebAppDevelopment"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: ""};
+
+    // Handles switching sysOP to main channel from the beginning
+    // Should probably switch to a function to avoid emitting
+    chatSession.channels["##Main"].currentUsers["sysOP"] = true;
+    chatSession.users["sysOP"].currentChannel = "##Main";
+    //console.log(chatSession.users["sysOP"]);
 
     // Adds sysOP to the user list and adds appropriate flair
-    nicknames.push("*" + chatSession.users["sysop"].nickname);
+    nicknames.push("*" + chatSession.users["sysOP"].nickname);
   }
 
 
 
 
 
-  /* START USERNAME REGISTRATION */
+  /* START USERNAME REGISTRATION PROTOCOL*/
 
   //socket is for the client
   socket.on('new user', function(data, callback){
@@ -86,19 +93,28 @@ io.on('connection', function(socket){
         nickname: socket.nickname,
         //tabs: 0,
         accessLevel: 2,
-        socket: socket
+        socket: socket,
+        currentChannel: "##Main"
       };
 
 
-      // Registers User to Channel //
+      // BEGIN USER REGISTRATION WITH SAME NAME
 
+      // Will have user join ##Main as default
+      chatSession.channels["##Main"].currentUsers[socket.nickname] = true;
+      chatSession.users[socket.nickname].currentChannel = "##Main";
 
       // Will send channelList to users REMEMBER TO COMMENT OUT
       updateChannelList(chatSession.users[socket.nickname].socket);
+
       // Increases chat count with new registration
       chatSession.count++;
+
       updateNicknames();
       //nickname becomes nickname plus random number
+
+      // ENDS USER REGISTRATION WITH SAME NAME
+
     }
     else{
       callback(true);
@@ -110,21 +126,31 @@ io.on('connection', function(socket){
         nickname: socket.nickname,
         accessLevel: 2,
         //tabs: 0,
-        socket: socket
+        socket: socket,
+        currentChannel: "##Main"
       };
 
-      // Will send channelList to users REMEMBER TO COMMENT OUT
+      // BEGIN REGISTRATION OF USER WITH UNIQUE NAME
+
+      // Will have user join ##Main as default
+      chatSession.channels["##Main"].currentUsers[socket.nickname] = true;
+      chatSession.users[socket.nickname].currentChannel = "##Main";
+
+      // Will send channelList to users **REMEMBER TO UNCOMMENT**
       updateChannelList(chatSession.users[socket.nickname].socket);
-      //socket.emit('updateChannelList', chatSession.channels)
+
       // Increases chat count with new registration
       chatSession.count++;
+
       // End of chat session adding user
       updateNicknames();
+
+      // END REGISTRATION OF USER WITH UNIQUE NAME
     }
 
 
 
-  /* END USERNAME REGISTRATION */
+  /* END USERNAME REGISTRATION PROTOCOL */
 
 
 
@@ -135,11 +161,11 @@ socket.on('addChannel', function(channelName){
   // Only moderators and admin can initially join this channel unless otherwise specified by user
   if(chatSession.users[socket.nickname].accessLevel <= 1)
   {
-    chatSession.channels["##" + channelName] = {accessLevel: 1, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: [], log: ""};
+    chatSession.channels["##" + channelName] = {accessLevel: 1, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: ""};
   }
   // Everyone can join this as it was created by a user
   else {
-    chatSession.channels["#" + channelName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: [], log: ""};
+    chatSession.channels["#" + channelName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: ""};
   }
 
   socket.emit('updateChannelList', chatSession.channels);
@@ -147,7 +173,7 @@ socket.on('addChannel', function(channelName){
 });
 
 socket.on('addPrivateChannel', function(otherUsersName){
-    chatSession.channels[socket.nickname + '-' + otherUsersName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: [], log: ""};
+    chatSession.channels[socket.nickname + '-' + otherUsersName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: ""};
 });
 
 
@@ -198,8 +224,7 @@ function updateChannelList(socket)
     }
   }
 
-  console.log(updatedChannelList);
-
+  // console.log(updatedChannelList);
   socket.emit('updateChannelList', updatedChannelList)
 }
 
@@ -210,10 +235,23 @@ function updateChannelList(socket)
 socket.on('send message', function(data){
   if(!commands.isCommand(data))
   {
+    // Holds the channel in which the user sent the message
+    var currentChannel = chatSession.users[socket.nickname].currentChannel;
 
-    // CREATE LOOP FOR CHANNEL USERLIST
-    io.sockets.emit('new message', {msg: data, nick: socket.nickname});
-    //chatSession.log()
+    // Adds the current message to the log of the channel as it would be displayed by the user
+    // This also takes care of making sure that the user send their chat message to the correct channel
+    chatSession.channels[currentChannel].log += '<b>' + socket.nickname + ': </b>' + data + '\n';
+
+    // Make sure to handle messaging ONLY those people in this current channel though LOOP!
+    for(user in chatSession.channels[chatSession.users[socket.nickname].currentChannel].currentUsers)
+    {
+      if(chatSession.users[user].socket === null) {
+        // HANDLES SYSOP NOT HAVING ITS SOCKET YET
+      }
+      else{
+      io.to(chatSession.users[user].socket.id).emit('new message', {msg: data, nick: socket.nickname});
+    }
+    }
   }
   else {
     commands.run(chatSession.users[socket.nickname], data);
@@ -222,9 +260,26 @@ socket.on('send message', function(data){
 });
 
 
-socket.on('switchUsersChannel', function(channelName, user){
 
+/**
+ * Handles switching a user from one channel to another
+ *
+*/
+socket.on('switchUsersChannel', function(user, newChannelName){
+  // Handles removing user from previous channel
+  var currentChannel = chatSession.channels[chatSession.users[user].currentChannel];
 
+  // Removes user from channel list for easier distribution of messages
+  delete chatSession.channels[currentChannel].currentUsers[user];
+
+  // Handles adding user to new channel's current users list
+  chatSession.channels[newChannelName].currentUsers[user] = true;
+
+  // Changes user's current channel to the new one
+  chatSession.users[user].currentChannel = newChannelName;
+
+  // Updates user's current chatlog to the correct one
+  socket.emit('updateChatlog', chatSession.channels[newChannelName].log);
 });
 
 
