@@ -54,9 +54,9 @@ io.on('connection', function(socket){
     };
 
     // Initilizes main system chat rooms once the first user logs in
-    chatSession.channel["##Main"] = {currentUsers: ["sysop"], log: ""};
-    chatSession.channel["##FIU"] = {currentUsers: [], log: ""};
-    chatSession.channel["##WebAppDevelopment"] = {currentUsers: [], log: ""};
+    chatSession.channel["##Main"] = {accessLevel: 2, currentUsers: ["sysop"], log: ""};
+    chatSession.channel["##FIU"] = {accessLevel: 2, currentUsers: [], log: ""};
+    chatSession.channel["##WebAppDevelopment"] = {accessLevel: 2, currentUsers: [], log: ""};
 
     // Adds sysOP to the user list and adds appropriate flair
     nicknames.push("*" + chatSession.users["sysop"].nickname);
@@ -176,7 +176,7 @@ socket.on('send message', function(data){
     //chatSession.log()
   }
   else {
-
+    commands.run(chatSession.users[socket.nickname], data);
   }
   //TO BROADCAST socket.BROADCAST.emit('new message', data);
 });
@@ -187,7 +187,17 @@ socket.on('send message', function(data){
 socket.on('disconnect', function(data){
   if(!socket.nickname) return;
   nicknames.splice(nicknames.indexOf(socket.nickname), 1);
-  chatSession.count--;
+  // Keeps SysOP from being added more than once
+  // SysOP keeps the count permanently @ 1 once server is initialized
+  if(chatSession.count == 1)
+  {
+    chatSession.count = 1;
+  }
+  else
+  {
+    chatSession.count--;
+  }
+
   updateNicknames();
 });
 });

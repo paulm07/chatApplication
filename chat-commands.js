@@ -3,47 +3,56 @@
  */
 module.exports = function(io, session) {
 var commands = {
+	// Handles changing nick
 	"nick": {
 		numArgs: 1,
-		handler: function(args, io, session, player) {
-			player.nick = args[0];
-			session.players[player.uuid] = player;
-			io.sockets.emit('nickname', player.nick);
+		handler: function(args, io, chatSession, user) {
+			user.nick = args[0];
+			session.users[user.uuid] = user;
+			io.sockets.emit('nickname', user.nick);
 		}
 	},
 	"clear": {
 		numArgs: 0,
-		handler: function(args, io, session, player) {
+		handler: function(args, io, session, user) {
 			session.log = "";
-			player.socket.emit('clear');
+			user.socket.emit('clear');
 		}
 	},
 	"help": {
 		numArgs: 0,
-		handler: function(args, io, session, player) {
-			player.socket.emit('message', '/nick <nickname> - change your username\n /clear - clear your chat log.');
+		handler: function(args, io, session, user) {
+			user.socket.emit('message', '/nick <nickname> - change your username\n /clear - clear your chat log.');
 		}
 	},
-	
-	// FINISH
-	"join channel": {
-		numArgs: 1,
-		handler: function(args, io, session, player) {
-			if(args[1] in session.channels)
-		  {
-			    player.currentChannel = numArgs[0];
-					player.socket.emit('clear');
 
-					//player.socket.emit('loadMessages');
-		  }
-			else {
-				//
-				//player.socket.emit('invalidMessage');
-			}
+	// // FINISH
+	// "join channel": {
+	// 	numArgs: 1,
+	// 	handler: function(args, io, session, user) {
+	// 		if(args[1] in session.channels)
+	// 	  {
+	// 		    user.currentChannel = numArgs[0];
+	// 				user.socket.emit('clear');
+	//
+	// 				//user.socket.emit('loadMessages');
+	// 	  }
+	// 		else {
+	// 			//
+	// 			//user.socket.emit('invalidMessage');
+	// 		}
+	//
+	// 	}
+	// },
+	// // FINISH
 
+	"join": {
+		numArgs: 2,
+		handler: function(args, io, chatSession, user)
+		{
+			console.log(args);
 		}
-	}
-	// FINISH
+	},
 }
 
 
@@ -57,12 +66,20 @@ var isCommand = function(msg) {
  * @param  {Object}
  * @param  {String}
  */
-var run = function(player, msg) {
+var run = function(user, msg) {
 	var cmd = msg.substring(1, msg.length);
 	var args = cmd.match(/[A-z][a-z]*/g);
 	var fun = args.shift();
 
-	commands[fun].handler(args, io, session, player);
+	// Try catch in order to handle unknown/erroneous commands
+  try{
+		commands[fun].handler(args, io, session, user);
+  }
+	catch (err)
+	{
+		user.socket.emit('commandError');
+	}
+
 }
 
 	return {
