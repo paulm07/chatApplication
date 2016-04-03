@@ -50,7 +50,24 @@ var commands = {
 		numArgs: 2,
 		handler: function(args, io, chatSession, user)
 		{
-			console.log(args);
+			if(args[1] in chatSession.channels){ // WILL ASSUME USER HAS CHOSE TO GO INTO PUBLIC CHANNEL AND WILL SWITCH THEM
+				if(chatSession.channels[args[1]].accessType == "public"){
+					io.socket.emit('switchUsersChannel', args[1], user);
+				}
+				else { // WILL ASSUME USER HAS CHOSEN TO GO INTO A PRIVATE CHANNEL
+					if(user.nickname in chatSession.channels[args[1]].accessList)
+					{
+						io.socket.emit('switchUsersChannel', args[1], user);
+					}
+					else {
+						user.socket.emit('channelError', "forbiddenChannel");
+					}
+				}
+
+			}
+			else {
+				user.socket.emit('channelError', 'invalidChannel');
+			}
 		}
 	},
 }

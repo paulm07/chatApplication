@@ -8,9 +8,9 @@ module.exports = {
 	count: 0,
 	// Holds the logs for each individual channel
 	// This list is loaded with the first three main items.
-	channel: {},
+	channels: {},
 	// Holds channel access list
-	channelAccessList: []
+	//channelAccessList: []
 	// Holds list of administrators
 
 

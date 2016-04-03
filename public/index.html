@@ -140,19 +140,28 @@
         // (keeps server from crashing)
         socket.on('commandError', function(){
           var errorMessage = document.createElement("article");
-          errorMessage.innerHTML = '<b>Error Reading Command</b>';
+          errorMessage.innerHTML = '<b>Invalid Command!</b>';
           $('.messages').append(errorMessage);
         })
 
+        // Handles user joining a certain channel
+        // socket.on('joinChannel', function(channelLog){
 
+        // });
 
-        socket.on('usernames', function(data){
-          var html = '';
-          for (i=0; i < data.length; i++){
-            html += data[i] + '<br/>'
+        // Handles command errors when user inputs erroneous channel command
+        socket.on('channelError', function(cause){
+          var errorMessage = document.createElement("article");
+          if(cause == "invalidChannel")
+          {
+            errorMessage.innerHTML = '<b>--Invalid Channel Selection!--</b>';
           }
-          $users.html(html);
-        });
+          else if (cause =='forbiddenChannel')
+          {
+            errorMessage.innerHTML = '<b>--Forbidden Channel Selection!--</b>';
+          }
+          $('.messages').append(errorMessage);
+        })
 
 
         // Updates the channel list for users
@@ -170,6 +179,13 @@
           // END CHANNEL UPDATE
         });
 
+        socket.on('usernames', function(data){
+          var html = '';
+          for (i=0; i < data.length; i++){
+            html += data[i] + '<br/>'
+          }
+          $users.html(html);
+        });
 
 
     $messageForm.submit(function(e){

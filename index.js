@@ -54,9 +54,9 @@ io.on('connection', function(socket){
     };
 
     // Initilizes main system chat rooms once the first user logs in
-    chatSession.channel["##Main"] = {accessLevel: 2, currentUsers: ["sysop"], log: ""};
-    chatSession.channel["##FIU"] = {accessLevel: 2, currentUsers: [], log: ""};
-    chatSession.channel["##WebAppDevelopment"] = {accessLevel: 2, currentUsers: [], log: ""};
+    chatSession.channels["##Main"] = {accessLevel: 0, accessType: "public", accessList: ["sysop"], currentUsers: ["sysop"], log: ""};
+    chatSession.channels["##FIU"] = {accessLevel: 0, accessType: "public", accessList: ["sysop"], currentUsers: [], log: ""};
+    chatSession.channels["##WebAppDevelopment"] = {accessLevel: 0, accessType: "public", accessList: ["sysop"], currentUsers: [], log: ""};
 
     // Adds sysOP to the user list and adds appropriate flair
     nicknames.push("*" + chatSession.users["sysop"].nickname);
@@ -94,7 +94,7 @@ io.on('connection', function(socket){
 
 
       // Will send channelList to users REMEMBER TO COMMENT OUT
-      socket.emit('updateChannelList', chatSession.channel)
+      updateChannelList(chatSession.users[socket.nickname].socket);
       // Increases chat count with new registration
       chatSession.count++;
       updateNicknames();
@@ -114,7 +114,8 @@ io.on('connection', function(socket){
       };
 
       // Will send channelList to users REMEMBER TO COMMENT OUT
-      socket.emit('updateChannelList', chatSession.channel)
+      updateChannelList(chatSession.users[socket.nickname].socket);
+      //socket.emit('updateChannelList', chatSession.channels)
       // Increases chat count with new registration
       chatSession.count++;
       // End of chat session adding user
@@ -127,6 +128,26 @@ io.on('connection', function(socket){
 
 
 
+});
+
+// Will add a channel based on access level
+socket.on('addChannel', function(channelName){
+  // Only moderators and admin can initially join this channel unless otherwise specified by user
+  if(chatSession.users[socket.nickname].accessLevel <= 1)
+  {
+    chatSession.channels["##" + channelName] = {accessLevel: 1, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: [], log: ""};
+  }
+  // Everyone can join this as it was created by a user
+  else {
+    chatSession.channels["#" + channelName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: [], log: ""};
+  }
+
+  socket.emit('updateChannelList', chatSession.channels);
+
+});
+
+socket.on('addPrivateChannel', function(otherUsersName){
+    chatSession.channels[socket.nickname + '-' + otherUsersName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: [], log: ""};
 });
 
 
@@ -161,7 +182,26 @@ socket.on('updateChatMessages', function(newChannel){
 });
 
 
+// Will handle sending list of public channels to specific user
+function updateChannelList(socket)
+{
+  var updatedChannelList = {};
 
+  for(line in chatSession.channels)
+  {
+    // Will only send channels which are public to the entire
+    if(chatSession.channels[line].accessType == "public")
+    {
+      // Signifies that the channel list, indeed, exists and adds the instance
+      // field to the object
+      updatedChannelList[line] = true;
+    }
+  }
+
+  console.log(updatedChannelList);
+
+  socket.emit('updateChannelList', updatedChannelList)
+}
 
 
 /**
@@ -179,6 +219,12 @@ socket.on('send message', function(data){
     commands.run(chatSession.users[socket.nickname], data);
   }
   //TO BROADCAST socket.BROADCAST.emit('new message', data);
+});
+
+
+socket.on('switchUsersChannel', function(channelName, user){
+
+
 });
 
 
