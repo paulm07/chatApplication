@@ -46,37 +46,46 @@ io.on('connection', function(socket){
     // Once sysOP logs in with correct password, socket of user which logged
     // as sysOP will be set as sysOP's socket
     chatSession.users["sysop"] = {
-      nickname: socket.sysop,
+      nickname: "sysOP",
       //tabs: 0,
+      accessLevel: 0,
       socket: null
+
     };
 
-    // Initilizes main system chat rooms
+    // Initilizes main system chat rooms once the first user logs in
     chatSession.channel["##Main"] = {currentUsers: ["sysop"], log: ""};
     chatSession.channel["##FIU"] = {currentUsers: [], log: ""};
     chatSession.channel["##WebAppDevelopment"] = {currentUsers: [], log: ""};
+
+    // Adds sysOP to the user list and adds appropriate flair
+    nicknames.push("*" + chatSession.users["sysop"].nickname);
   }
 
+
+
+
+
   /* START USERNAME REGISTRATION */
+
   //socket is for the client
   socket.on('new user', function(data, callback){
 
 
-
-
-
-
+    // Handles whether nickname exists or not. If the nickname exists at
+    // registration, the nickname will be accepted but appended with a random
+    // number between and 9999
     if (nicknames.indexOf(data) != -1){
       /* Gives users a random nickname if the username is already chosen */
       callback(false);
       socket.nickname = data + Math.floor((Math.random() * 1000) + 1000);
       nicknames.push(socket.nickname);
 
-
-
+      // Creates a new user with regular access level and chosen nickname
       chatSession.users[socket.nickname] = {
         nickname: socket.nickname,
         //tabs: 0,
+        accessLevel: 2,
         socket: socket
       };
 
@@ -86,9 +95,8 @@ io.on('connection', function(socket){
 
       // Will send channelList to users REMEMBER TO COMMENT OUT
       socket.emit('updateChannelList', chatSession.channel)
-
-
-
+      // Increases chat count with new registration
+      chatSession.count++;
       updateNicknames();
       //nickname becomes nickname plus random number
     }
@@ -100,6 +108,7 @@ io.on('connection', function(socket){
       /* chatSession will hold user by username */
       chatSession.users[socket.nickname] = {
         nickname: socket.nickname,
+        accessLevel: 2,
         //tabs: 0,
         socket: socket
       };
@@ -114,7 +123,7 @@ io.on('connection', function(socket){
 
 
 
-    /* END USERNAME REGISTRATION */
+  /* END USERNAME REGISTRATION */
 
 
 
@@ -135,6 +144,21 @@ function updateNicknames(){
   io.sockets.emit('usernames', nicknames);
 }
 
+
+
+
+// HANDLES UPDATING CHAT MESSAGES
+
+/**
+ * Handles user changing their channel with element
+ */
+socket.on('updateChatMessages', function(newChannel){
+  // Find a way to
+  chatSession.users[socket.nickname].currentChannel = newChannel;
+
+  socket.emit('');
+
+});
 
 
 
