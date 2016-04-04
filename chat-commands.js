@@ -25,6 +25,7 @@ var commands = {
 			user.socket.emit('message', '/nick <nickname> - change your username\n /clear - clear your chat log.');
 		}
 	},
+	// Creates a New Channel
 	"createChannel": {
 		numArgs: 1,
 		handler: function(args, io, session, user) {
@@ -72,6 +73,77 @@ var commands = {
 		}
 	}
 	},
+
+  // Promotes user. Both SysOP and Admin can promote.
+	"promote": {
+		numArgs: 1,
+		handler: function(args, io, chatSession, user) {
+			// SysOP has request promotion
+			if(args[0] in chatSession.users){
+				console.log(chatSession.users[user.nickname].accessLevel);
+				if(chatSession.users[user.nickname].accessLevel <= 1)
+				{
+					chatSession.users[args[0]].isModerator = true;
+					if(chatSession.users[args[0]].accessLevel > 0){
+					chatSession.users[args[0]].accessLevel = 1;
+					}
+					user.socket.emit('requestUserNameUpdate');
+				}
+				else {
+					user.socket.emit('errorHandler', 'restricted');
+				}
+		}
+		else {
+			user.socket.emit('errorHandler', 'userNotFound');
+		}
+		}
+	},
+
+	// Promotes user. Both SysOP and Admin can promote.
+	"demote": {
+		numArgs: 1,
+		handler: function(args, io, chatSession, user) {
+			// SysOP has request promotion
+			if(args[0] in chatSession.users){
+				console.log(chatSession.users[user.nickname].accessLevel);
+				if(chatSession.users[user.nickname].accessLevel == 0)
+				{
+					chatSession.users[args[0]].isModerator = false;
+					chatSession.users[args[0]].accessLevel = 2;
+					user.socket.emit('requestUserNameUpdate');
+				}
+				else {
+					user.socket.emit('errorHandler', 'restricted');
+				}
+		}
+		else {
+			user.socket.emit('errorHandler', 'userNotFound');
+		}
+		}
+	},
+
+	"login": {
+		numArgs: 2,
+		handler: function(args, io, chatSession, user) {
+			// SysOP has request promotion
+			//console.log(user);
+			if(args[0] != 'sysop'){ // WILL SHOOT OFF ERROR IF USER DID NOT INCLUDE CHANNEL KEYWORD
+			user.socket.emit('commandError');
+		}
+			else{
+				if(args[1] == 'illuminate')
+				{
+					// User which enters password is now sysop
+					// Original user is now deleted and original user has now taken
+					// control of sysop account.
+					chatSession.users[user.nickname].accessLevel = 0;
+					user.socket.emit('requestUserNameUpdate');
+					//console.log(chatSession.users[user.nickname]);
+				}
+		}
+	}
+	},
+
 }
 
 

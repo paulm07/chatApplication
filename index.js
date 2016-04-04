@@ -45,14 +45,15 @@ io.on('connection', function(socket){
   {
     // Once sysOP logs in with correct password, socket of user which logged
     // as sysOP will be set as sysOP's socket
-    chatSession.users["sysOP"] = {
-      nickname: "sysOP",
-      //tabs: 0,
-      accessLevel: 0,
-      socket: null,
-      currentChannel: "main"
-
-    };
+    // chatSession.users["sysOP"] = {
+    //   nickname: "sysOP",
+    //   //tabs: 0,
+    //   accessLevel: 0,
+    //   isModerator: false,
+    //   socket: null,
+    //   currentChannel: "main"
+    //
+    // };
 
     // Initilizes main system chat rooms once the first user logs in
     chatSession.channels["main"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##main</b> channel--</h3>\n"};
@@ -61,12 +62,12 @@ io.on('connection', function(socket){
 
     // Handles switching sysOP to main channel from the beginning
     // Should probably switch to a function to avoid emitting
-    chatSession.channels["main"].currentUsers["sysOP"] = true;
-    chatSession.users["sysOP"].currentChannel = "main";
+    // chatSession.channels["main"].currentUsers["sysOP"] = true;
+    // chatSession.users["sysOP"].currentChannel = "main";
     //console.log(chatSession.users["sysOP"]);
 
     // Adds sysOP to the user list and adds appropriate flair
-    nicknames.push("*" + chatSession.users["sysOP"].nickname);
+    // nicknames.push(chatSession.users["sysOP"].nickname);
   }
 
 
@@ -93,6 +94,7 @@ io.on('connection', function(socket){
         nickname: socket.nickname,
         //tabs: 0,
         accessLevel: 2,
+        isModerator: false,
         socket: socket,
         currentChannel: "main"
       };
@@ -159,9 +161,9 @@ io.on('connection', function(socket){
 
   /* END USERNAME REGISTRATION PROTOCOL */
 
-
-
 });
+
+
 
 // Will add a channel based on access level
 socket.on('createChannel', function(channelName){
@@ -199,10 +201,32 @@ socket.on('addPrivateChannel', function(otherUsersName){
 
 
 /**
- * Handles updating nickname list for all users
+ * Handles updating nickname list for all users. Takes into account whether users
+ * are sysOP or moderators
  */
 function updateNicknames(){
-  io.sockets.emit('usernames', nicknames);
+  //io.sockets.emit('usernames', nicknames);
+  var formattedNickNames = [];
+
+  for(var i = 0; i < nicknames.length; i++)
+  {
+    var currentName = nicknames[i];
+    if(chatSession.users[currentName].accessLevel == 0)
+    {
+      formattedNickNames.push("*" + chatSession.users[currentName].nickname);
+    }
+    else if(chatSession.users[currentName].accessLevel == 1)
+    {
+      formattedNickNames.push("+" + chatSession.users[currentName].nickname);
+    }
+    else {
+      formattedNickNames.push(chatSession.users[currentName].nickname);
+    }
+  }
+
+  console.log(formattedNickNames);
+
+  io.sockets.emit('usernames', formattedNickNames);
 }
 
 
@@ -220,6 +244,14 @@ socket.on('updateChatMessages', function(newChannel){
   socket.emit('');
 
 });
+
+
+
+
+socket.on('userNameUpdate', function(){
+  updateNicknames();
+});
+
 
 
 // Will handle sending list of public channels to specific user
@@ -251,6 +283,8 @@ function initializeChannelList(socket)
 }
 
 
+
+
 // Will handle sending list of public channels to specific user
 function updateAllChannelLists()
 {
@@ -278,6 +312,8 @@ function updateAllChannelLists()
   // console.log(updatedChannelList);
   io.emit('updateChannelList', updatedChannelList);
 }
+
+
 
 
 /**
@@ -309,6 +345,7 @@ socket.on('send message', function(data){
   }
   //TO BROADCAST socket.BROADCAST.emit('new message', data);
 });
+
 
 
 
