@@ -117,14 +117,21 @@
       var errorMessage = document.createElement("article");
       errorMessage.innerHTML = '<b>Invalid Command!</b>';
       $('.messages').append(errorMessage);
-      })
+    });
 
 
 
     // Handles command errors when user inputs erroneous channel command
-    socket.on('channelError', function(cause){
+    socket.on('errorHandler', function(cause){
       var errorMessage = document.createElement("article");
-      if(cause == "invalidChannel")
+
+      // CREATE CHANNEL ERROR HANDLING
+      if(cause == 'channelExists')
+      {
+        errorMessage.innerHTML = '<b>--Channel Name Already Exists!--</b>';
+      }
+      // JOIN CHANNEL ERRROR HANDLING
+      else if(cause == "invalidChannel")
       {
         errorMessage.innerHTML = '<b>--Invalid Channel Selection!--</b>';
       }
@@ -133,9 +140,12 @@
         errorMessage.innerHTML = '<b>--Forbidden Channel Selection!--</b>';
       }
       $('.messages').append(errorMessage);
-    })
+    });
 
 
+    socket.on('allowCreateRequest', function(newChannelName){
+      socket.emit('createChannel', newChannelName);
+    });
 
     // Command-Session has handled checking for errors
     // Security will still be checked having passed that stage
@@ -154,6 +164,8 @@
     socket.on('updateChannelList', function(channelList){
       // START CHANNEL UPDATE
       console.log(channelList);
+      $('#channels').empty();
+
       for(var line in channelList)
       {
         var channel = document.createElement("option");

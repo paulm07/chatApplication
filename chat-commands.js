@@ -28,7 +28,14 @@ var commands = {
 	"createChannel": {
 		numArgs: 1,
 		handler: function(args, io, session, user) {
-			//if(args[0] in )
+			if(args[0] in session.channels)
+			{
+				console.log("channel exists!");
+				user.socket.emit('errorHandler', 'channelExists');
+			}
+			else {
+				user.socket.emit('allowCreateRequest', args[0]);
+			}
 		}
 	},
 	// // FINISH
@@ -73,12 +80,12 @@ var commands = {
 						user.socket.emit('allowSwitchRequest', user.nickname, args[1]);
 					}
 					else {
-						user.socket.emit('channelError', "forbiddenChannel");
+						user.socket.emit('errorHandler', "forbiddenChannel");
 					}
 				}
 			}
 			else {
-				user.socket.emit('channelError', 'invalidChannel');
+				user.socket.emit('errorHandler', 'invalidChannel');
 			}
 		}
 	}
@@ -101,12 +108,13 @@ var run = function(user, msg) {
 	var args = cmd.match(/[A-z][A-z][A-z]*/g);
 	var fun = args.shift();
 
-	Try catch in order to handle unknown/erroneous commands
+	// Try catch in order to handle unknown/erroneous commands
   try{
 		commands[fun].handler(args, io, session, user);
   }
 	catch (err)
 	{
+		console.log(err);
 		user.socket.emit('commandError');
 	}
 

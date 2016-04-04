@@ -50,19 +50,19 @@ io.on('connection', function(socket){
       //tabs: 0,
       accessLevel: 0,
       socket: null,
-      currentChannel: "Main"
+      currentChannel: "main"
 
     };
 
     // Initilizes main system chat rooms once the first user logs in
-    chatSession.channels["Main"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##Main</b> channel--</h3>\n"};
-    chatSession.channels["FIU"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##FIU</b> channel--</h3>\n"};
-    chatSession.channels["WebAppDevelopment"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##WebAppDevelopment</b> channel--</h3>\n"};
+    chatSession.channels["main"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##main</b> channel--</h3>\n"};
+    chatSession.channels["fiu"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##fiu</b> channel--</h3>\n"};
+    chatSession.channels["webappdevelopment"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##webappdevelopment</b> channel--</h3>\n"};
 
     // Handles switching sysOP to main channel from the beginning
     // Should probably switch to a function to avoid emitting
-    chatSession.channels["Main"].currentUsers["sysOP"] = true;
-    chatSession.users["sysOP"].currentChannel = "Main";
+    chatSession.channels["main"].currentUsers["sysOP"] = true;
+    chatSession.users["sysOP"].currentChannel = "main";
     //console.log(chatSession.users["sysOP"]);
 
     // Adds sysOP to the user list and adds appropriate flair
@@ -94,18 +94,18 @@ io.on('connection', function(socket){
         //tabs: 0,
         accessLevel: 2,
         socket: socket,
-        currentChannel: "Main"
+        currentChannel: "main"
       };
 
 
       // BEGIN USER REGISTRATION WITH SAME NAME
 
-      // Will have user join ##Main as default
-      chatSession.channels["Main"].currentUsers[socket.nickname] = true;
-      chatSession.users[socket.nickname].currentChannel = "Main";
+      // Will have user join ##main as default
+      chatSession.channels["main"].currentUsers[socket.nickname] = true;
+      chatSession.users[socket.nickname].currentChannel = "main";
 
       // Will send channelList to users REMEMBER TO COMMENT OUT
-      updateChannelList(chatSession.users[socket.nickname].socket);
+      initializeChannelList(chatSession.users[socket.nickname].socket);
 
       // Increases chat count with new registration
       chatSession.count++;
@@ -113,8 +113,8 @@ io.on('connection', function(socket){
       // Updates nick names
       updateNicknames();
 
-      // Adds intial ##Main log when signed in
-      io.to(socket.id).emit('updateChatLog', chatSession.channels['Main'].log);
+      // Adds intial ##main log when signed in
+      io.to(socket.id).emit('updateChatLog', chatSession.channels['main'].log);
 
 
       // ENDS USER REGISTRATION WITH SAME NAME
@@ -131,17 +131,17 @@ io.on('connection', function(socket){
         accessLevel: 2,
         //tabs: 0,
         socket: socket,
-        currentChannel: "Main"
+        currentChannel: "main"
       };
 
       // BEGIN REGISTRATION OF USER WITH UNIQUE NAME
 
-      // Will have user join ##Main as default
-      chatSession.channels["Main"].currentUsers[socket.nickname] = true;
-      chatSession.users[socket.nickname].currentChannel = "Main";
+      // Will have user join ##main as default
+      chatSession.channels["main"].currentUsers[socket.nickname] = true;
+      chatSession.users[socket.nickname].currentChannel = "main";
 
       // Will send channelList to users **REMEMBER TO UNCOMMENT**
-      updateChannelList(chatSession.users[socket.nickname].socket);
+      initializeChannelList(chatSession.users[socket.nickname].socket);
 
       // Increases chat count with new registration
       chatSession.count++;
@@ -149,8 +149,8 @@ io.on('connection', function(socket){
       // End of chat session adding user
       updateNicknames();
 
-      // Adds intial ##Main log when signed in
-      io.to(socket.id).emit('updateChatLog', chatSession.channels['Main'].log);
+      // Adds intial ##main log when signed in
+      io.to(socket.id).emit('updateChatLog', chatSession.channels['main'].log);
 
       // END REGISTRATION OF USER WITH UNIQUE NAME
     }
@@ -164,18 +164,22 @@ io.on('connection', function(socket){
 });
 
 // Will add a channel based on access level
-socket.on('addChannel', function(channelName){
+socket.on('createChannel', function(channelName){
   // Only moderators and admin can initially join this channel unless otherwise specified by user
-  if(chatSession.users[socket.nickname].accessLevel <= 1)
+  if(chatSession.users[socket.nickname].accessLevel === 0)
   {
-    chatSession.channels["##" + channelName] = {accessLevel: 1, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: ""};
+    chatSession.channels[channelName] = {accessLevel: 0, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: ""};
+  }
+  else if(chatSession.users[socket.nickname].accessLevel == 1)
+  {
+    chatSession.channels[channelName] = {accessLevel: 1, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: ""};
   }
   // Everyone can join this as it was created by a user
   else {
-    chatSession.channels["#" + channelName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: ""};
+    chatSession.channels[channelName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: ""};
   }
 
-  socket.emit('updateChannelList', chatSession.channels);
+  updateAllChannelLists();
 
 });
 
@@ -216,7 +220,7 @@ socket.on('updateChatMessages', function(newChannel){
 
 
 // Will handle sending list of public channels to specific user
-function updateChannelList(socket)
+function initializeChannelList(socket)
 {
   var updatedChannelList = {};
 
@@ -234,13 +238,42 @@ function updateChannelList(socket)
         updatedChannelList["##" + line] = true;
       }
       else { // CREATED BY REGULAR USER
-        updatedChannelList.push["#" + line] = true;
+        updatedChannelList["#" + line] = true;
       }
     }
   }
 
   // console.log(updatedChannelList);
   socket.emit('updateChannelList', updatedChannelList);
+}
+
+
+// Will handle sending list of public channels to specific user
+function updateAllChannelLists()
+{
+  var updatedChannelList = {};
+
+  for(line in chatSession.channels)
+  {
+    // Will only send channels which are public to the entire
+    if(chatSession.channels[line].accessType == "public")
+    {
+      // Signifies that the channel list, indeed, exists and adds the instance
+      // field to the object
+      //updatedChannelList[line] = true;
+
+      // Handles adding the appropriate hashtags to channels
+      if(chatSession.channels[line].accessLevel <= 1) { // CREATED BY ADMIN/MOD
+        updatedChannelList["##" + line] = true;
+      }
+      else { // CREATED BY REGULAR USER
+        updatedChannelList["#" + line] = true;
+      }
+    }
+  }
+
+  // console.log(updatedChannelList);
+  io.emit('updateChannelList', updatedChannelList);
 }
 
 
