@@ -151,9 +151,9 @@
       {
         errorMessage.innerHTML = '<b>--You Do Not Have the proper Access Rights!--</b>';
       }
-      else if (cause =='restricted')
+      else if (cause =='shortArgument')
       {
-        errorMessage.innerHTML = '<b>--You Do Not Have the proper Access Rights!--</b>';
+        errorMessage.innerHTML = '<b>--Your Argument is Too Short!--</b>';
       }
       else if (cause =='userNotFound')
       {
@@ -184,6 +184,48 @@
 
 
 
+
+    // Updates chatlog
+    socket.on('printChannelList', function(channelList){
+
+      // Tells user it is about to print channel list
+      var topMessage = document.createElement("article");
+      topMessage.innerHTML = "<br/><b>--Current Channels--</b>";
+      $('.messages').append(topMessage);
+
+
+      //var splitMessage = channelList.split("\n");
+      //console.log(splitMessage);
+
+    //   for(var line in splitMessage)
+    //   {
+    //     //console.log(splitMessage[line]);
+    //     var txtWritten = document.createElement("article");
+    //     txtWritten.innerHTML = splitMessage[line];
+    //     //console.log(splitMessage[line]);
+    //     $('.messages').append(txtWritten);
+    //
+    //
+    //
+    // }
+
+    for(var line in channelList)
+    {
+      var channel = document.createElement("article");
+      channel.innerHTML = line;
+      $('.messages').append(channel);
+    }
+
+    var bottomMessage = document.createElement("article");
+
+    bottomMessage.innerHTML = "<b>--End of Current Channels--</b><br/>"
+
+    $('.messages').append(bottomMessage);
+
+  });
+
+
+
     // Requests server to update list after promotion or demotion
     socket.on('requestUserNameUpdate', function(){
       console.log("requested");
@@ -194,7 +236,7 @@
     // Updates the channel list for users
     socket.on('updateChannelList', function(channelList){
       // START CHANNEL UPDATE
-      console.log(channelList);
+      //console.log(channelList);
       $('#channels').empty();
 
       for(var line in channelList)

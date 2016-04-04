@@ -39,7 +39,86 @@ var commands = {
 			}
 		}
 	},
+	// Used to delete a channel
+	"deleteChannel": {
+		numArgs: 1,
+		handler: function(args, io, session, user) {
+			if(args[0].toLowerCase() in session.channels)
+			{
+				console.log("channel exists!");
+				user.socket.emit('errorHandler', 'channelExists');
+			}
+			else {
+				user.socket.emit('allowCreateRequest', args[0].toLowerCase());
+			}
+		}
+	},
+	// Sends user a list of channels
+	"list": {
+		numArgs: 1,
+		handler: function(args, io, chatSession, user) {
+			// console.log(args[0]);
+			var updatedChannelList = {};
+			console.log(args[0]); if(typeof args[0] == "undefined") // User has entered a
+			{
 
+
+		  	for(line in chatSession.channels)
+		  	{
+		    	// Will only send channels which are public to the entire
+		    	if(chatSession.channels[line].accessType == "public")
+		    	{
+		      	// Signifies that the channel list, indeed, exists and adds the instance
+		      	// field to the object
+		      	//updatedChannelList[line] = true;
+
+		      	// Handles adding the appropriate hashtags to channels
+		      	if(chatSession.channels[line].accessLevel <= 1) { // CREATED BY ADMIN/MOD
+		        	updatedChannelList["##" + line] = true;
+		      	}
+		      	else { // CREATED BY REGULAR USER
+		        	updatedChannelList["#" + line] = true;
+		      	}
+		    	}
+
+
+			}
+								user.socket.emit('printChannelList', updatedChannelList);
+		}
+			else {
+				for(line in chatSession.channels)
+		  	{
+		    	// Will only send channels which are public to the entire
+		    	if(chatSession.channels[line].accessType == "public")
+		    	{
+		      	// Signifies that the channel list, indeed, exists and adds the instance
+		      	// field to the object
+		      	//updatedChannelList[line] = true;
+
+		      	// Handles adding the appropriate hashtags to channels and checking if
+						// channel substring matches
+		      	if(chatSession.channels[line].accessLevel <= 1) { // CREATED BY ADMIN/MOD
+							console.log(line);
+							if(line.indexOf(args[0]) > -1)
+							{
+		        		updatedChannelList["##" + line] = true;
+							}
+		      	}
+		      	else { // CREATED BY REGULAR USER
+							if(line.indexOf(args[0]) > -1)
+							{
+								updatedChannelList["#" + line] = true;
+							}
+		      	}
+		    	}
+				}
+			user.socket.emit('printChannelList', updatedChannelList);
+
+		  // console.log(updatedChannelList);
+		  //user.socket.emit('printChannelList', updatedChannelList);
+		}
+	}
+	},
 
    // !!!!!!REMEMBER TO MAKE SPECIFIC TO THE USER WHEN SENDING ERROR MESSAGE!!!!! //
 	"join": {
@@ -99,7 +178,7 @@ var commands = {
 		}
 	},
 
-	// Promotes user. Both SysOP and Admin can promote.
+	// Demotes a moderator. Only sysOP can demote
 	"demote": {
 		numArgs: 1,
 		handler: function(args, io, chatSession, user) {
