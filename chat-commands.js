@@ -25,7 +25,12 @@ var commands = {
 			user.socket.emit('message', '/nick <nickname> - change your username\n /clear - clear your chat log.');
 		}
 	},
-
+	"createChannel": {
+		numArgs: 1,
+		handler: function(args, io, session, user) {
+			//if(args[0] in )
+		}
+	},
 	// // FINISH
 	// "join channel": {
 	// 	numArgs: 1,
@@ -96,16 +101,14 @@ var run = function(user, msg) {
 	var args = cmd.match(/[A-z][A-z][A-z]*/g);
 	var fun = args.shift();
 
-	// Try catch in order to handle unknown/erroneous commands
-	commands[fun].handler(args, io, session, user);
-	//user.socket.emit('commandError');
-  // try{
-	// 	commands[fun].handler(args, io, session, user);
-  // }
-	// catch (err)
-	// {
-	// 	user.socket.emit('commandError');
-	// }
+	Try catch in order to handle unknown/erroneous commands
+  try{
+		commands[fun].handler(args, io, session, user);
+  }
+	catch (err)
+	{
+		user.socket.emit('commandError');
+	}
 
 }
 
