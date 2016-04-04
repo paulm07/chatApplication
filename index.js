@@ -168,15 +168,18 @@ socket.on('createChannel', function(channelName){
   // Only moderators and admin can initially join this channel unless otherwise specified by user
   if(chatSession.users[socket.nickname].accessLevel === 0)
   {
-    chatSession.channels[channelName] = {accessLevel: 0, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: ""};
+    var newChannelWelcomeMessage = "<h3>--Welcome to the <b>##"+ channelName + "</b> channel--</h3>\n";
+    chatSession.channels[channelName] = {accessLevel: 0, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: newChannelWelcomeMessage};
   }
   else if(chatSession.users[socket.nickname].accessLevel == 1)
   {
-    chatSession.channels[channelName] = {accessLevel: 1, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: ""};
+    var newChannelWelcomeMessage = "<h3>--Welcome to the <b>##"+ channelName + "</b> channel--</h3>\n";
+    chatSession.channels[channelName] = {accessLevel: 1, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: newChannelWelcomeMessage};
   }
   // Everyone can join this as it was created by a user
   else {
-    chatSession.channels[channelName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: ""};
+    var newChannelWelcomeMessage = "<h3>--Welcome to the <b>#"+ channelName + "</b> channel--</h3>\n";
+    chatSession.channels[channelName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: newChannelWelcomeMessage};
   }
 
   updateAllChannelLists();

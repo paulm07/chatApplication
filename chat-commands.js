@@ -28,35 +28,17 @@ var commands = {
 	"createChannel": {
 		numArgs: 1,
 		handler: function(args, io, session, user) {
-			if(args[0] in session.channels)
+			if(args[0].toLowerCase() in session.channels)
 			{
 				console.log("channel exists!");
 				user.socket.emit('errorHandler', 'channelExists');
 			}
 			else {
-				user.socket.emit('allowCreateRequest', args[0]);
+				user.socket.emit('allowCreateRequest', args[0].toLowerCase());
 			}
 		}
 	},
-	// // FINISH
-	// "join channel": {
-	// 	numArgs: 1,
-	// 	handler: function(args, io, session, user) {
-	// 		if(args[1] in session.channels)
-	// 	  {
-	// 		    user.currentChannel = numArgs[0];
-	// 				user.socket.emit('clear');
-	//
-	// 				//user.socket.emit('loadMessages');
-	// 	  }
-	// 		else {
-	// 			//
-	// 			//user.socket.emit('invalidMessage');
-	// 		}
-	//
-	// 	}
-	// },
-	// // FINISH
+
 
    // !!!!!!REMEMBER TO MAKE SPECIFIC TO THE USER WHEN SENDING ERROR MESSAGE!!!!! //
 	"join": {
@@ -77,7 +59,7 @@ var commands = {
 				else { // WILL ASSUME USER HAS CHOSEN TO GO INTO A PRIVATE CHANNEL
 					if(user.nickname in chatSession.channels[args[1]].accessList)
 					{
-						user.socket.emit('allowSwitchRequest', user.nickname, args[1]);
+						user.socket.emit('allowSwitchRequest', user.nickname, args[1].toLowerCase());
 					}
 					else {
 						user.socket.emit('errorHandler', "forbiddenChannel");

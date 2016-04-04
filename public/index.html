@@ -104,6 +104,11 @@
 
     });
 
+    $("#channels").change(function(){
+
+      socket.emit('send message', '/join channel ' + $("#channels option:selected").text());
+    });
+
 
     // Handles clearing the messages
     socket.on('clear', function(){
