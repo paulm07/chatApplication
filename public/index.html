@@ -135,7 +135,7 @@
 
         // Handles clearing the messages
         socket.on('clear', function(){
-          $('messages').innerHTML = "";
+          $('.messages').empty();
         });
 
 
@@ -182,6 +182,13 @@
         //   // END CHANNEL UPDATE
         // });
 
+        // Command-Session has handled checking for errors
+        // Security will still be checked having passed that stage
+        socket.on('allowSwitchRequest', function(user, newChannel)
+        {
+          socket.emit('switchUsersChannel', user, newChannel);
+        });
+
         // Updates the channel list for users
         socket.on('updateChannelList', function(channelList){
           // START CHANNEL UPDATE
@@ -198,10 +205,12 @@
 
         // Updates chatlog
         socket.on('updateChatLog', function(chatLog){
-          socket.emit('clear');
+
+
+          socket.emit('send message', '/clear');
 
           var splitMessage = chatLog.split("\n");
-          //console.log(splitMessage);
+          console.log(splitMessage);
 
           for(var line in splitMessage)
           {

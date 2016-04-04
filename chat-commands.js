@@ -46,11 +46,12 @@ var commands = {
 	// },
 	// // FINISH
 
+   // !!!!!!REMEMBER TO MAKE SPECIFIC TO THE USER WHEN SENDING ERROR MESSAGE!!!!! //
 	"join": {
 		numArgs: 2,
 		handler: function(args, io, chatSession, user)
 		{
-			console.log(args[0]);
+			//console.log(user);
 			if(args[0] != 'channel'){ // WILL SHOOT OFF ERROR IF USER DID NOT INCLUDE CHANNEL KEYWORD
 			user.socket.emit('commandError');
 		}
@@ -58,18 +59,18 @@ var commands = {
 
 			if(args[1] in chatSession.channels){ // WILL ASSUME USER HAS CHOSE TO GO INTO PUBLIC CHANNEL AND WILL SWITCH THEM
 				if(chatSession.channels[args[1]].accessType == "public"){
-					io.socket.emit('switchUsersChannel', args[1], user);
+					//console.log("Send me channels!");
+					io.to(chatSession.users[user.nickname].socket.id).emit('allowSwitchRequest', user.nickname, args[1]);
 				}
 				else { // WILL ASSUME USER HAS CHOSEN TO GO INTO A PRIVATE CHANNEL
 					if(user.nickname in chatSession.channels[args[1]].accessList)
 					{
-						io.socket.emit('switchUsersChannel', user, args[1]);
+						user.socket.emit('allowSwitchRequest', user.nickname, args[1]);
 					}
 					else {
 						user.socket.emit('channelError', "forbiddenChannel");
 					}
 				}
-
 			}
 			else {
 				user.socket.emit('channelError', 'invalidChannel');
@@ -92,17 +93,19 @@ var isCommand = function(msg) {
  */
 var run = function(user, msg) {
 	var cmd = msg.substring(1, msg.length);
-	var args = cmd.match(/[A-z][a-z]*/g);
+	var args = cmd.match(/[A-z][A-z][A-z]*/g);
 	var fun = args.shift();
 
 	// Try catch in order to handle unknown/erroneous commands
-  try{
-		commands[fun].handler(args, io, session, user);
-  }
-	catch (err)
-	{
-		user.socket.emit('commandError');
-	}
+	commands[fun].handler(args, io, session, user);
+	//user.socket.emit('commandError');
+  // try{
+	// 	commands[fun].handler(args, io, session, user);
+  // }
+	// catch (err)
+	// {
+	// 	user.socket.emit('commandError');
+	// }
 
 }
 
