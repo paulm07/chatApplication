@@ -55,9 +55,9 @@ io.on('connection', function(socket){
     };
 
     // Initilizes main system chat rooms once the first user logs in
-    chatSession.channels["Main"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: ""};
-    chatSession.channels["FIU"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: ""};
-    chatSession.channels["WebAppDevelopment"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: ""};
+    chatSession.channels["Main"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##Main</b> channel--</h3>\n"};
+    chatSession.channels["FIU"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##FIU</b> channel--</h3>\n"};
+    chatSession.channels["WebAppDevelopment"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##WebAppDevelopment</b> channel--</h3>\n"};
 
     // Handles switching sysOP to main channel from the beginning
     // Should probably switch to a function to avoid emitting
@@ -110,8 +110,12 @@ io.on('connection', function(socket){
       // Increases chat count with new registration
       chatSession.count++;
 
+      // Updates nick names
       updateNicknames();
-      //nickname becomes nickname plus random number
+
+      // Adds intial ##Main log when signed in
+      io.to(socket.id).emit('updateChatLog', chatSession.channels['Main'].log);
+
 
       // ENDS USER REGISTRATION WITH SAME NAME
 
@@ -144,6 +148,9 @@ io.on('connection', function(socket){
 
       // End of chat session adding user
       updateNicknames();
+
+      // Adds intial ##Main log when signed in
+      io.to(socket.id).emit('updateChatLog', chatSession.channels['Main'].log);
 
       // END REGISTRATION OF USER WITH UNIQUE NAME
     }
@@ -272,6 +279,7 @@ socket.on('send message', function(data){
 /**
  * Handles switching a user from one channel to another
  *
+ * SECURITY CHECKS TO BE ADDED LATER
 */
 socket.on('switchUsersChannel', function(user, newChannelName){
   // Handles removing user from previous channel

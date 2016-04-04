@@ -105,131 +105,91 @@
     }
 
 
+    // Handles clearing the messages
+    socket.on('clear', function(){
+      $('.messages').empty();
+    });
+
+
+    // Handles command errors when user inputs erroneous command
+    // (keeps server from crashing)
+    socket.on('commandError', function(){
+      var errorMessage = document.createElement("article");
+      errorMessage.innerHTML = '<b>Invalid Command!</b>';
+      $('.messages').append(errorMessage);
+      })
 
 
 
-// UUID handling
-/*
-    // Server will call connection function once io() is called which will force
-    // local browser to create UUID. This will then be used by the server to uniquely
-    // identify the socket by UUID.
-
-    // UUID can be used to determine Admin and identify specific people
-
-    socket.on('connection', function(){
-      //
-      if (!(uuid = localStorage.getItem('uuid'))) {
-        var randomlyGeneratedUID = Math.random().toString(36).substring(3, 16) + +new Date;
-        // UUID will be stored locally
-        localStorage.setItem('uuid', randomlyGeneratedUID);
+    // Handles command errors when user inputs erroneous channel command
+    socket.on('channelError', function(cause){
+      var errorMessage = document.createElement("article");
+      if(cause == "invalidChannel")
+      {
+        errorMessage.innerHTML = '<b>--Invalid Channel Selection!--</b>';
+      }
+      else if (cause =='forbiddenChannel')
+      {
+        errorMessage.innerHTML = '<b>--Forbidden Channel Selection!--</b>';
+      }
+      $('.messages').append(errorMessage);
     })
-    // Will emit UUID to
-    socket.emit('registerUUID', uuid + "," + nickNameRegistered);
-
-*/
-
-  );
 
 
-  // FINISH SOON //
 
-        // Handles clearing the messages
-        socket.on('clear', function(){
-          $('.messages').empty();
-        });
-
-
-        // Handles command errors when user inputs erroneous command
-        // (keeps server from crashing)
-        socket.on('commandError', function(){
-          var errorMessage = document.createElement("article");
-          errorMessage.innerHTML = '<b>Invalid Command!</b>';
-          $('.messages').append(errorMessage);
-        })
-
-        // Handles user joining a certain channel
-        // socket.on('joinChannel', function(channelLog){
-
-        // });
-
-        // Handles command errors when user inputs erroneous channel command
-        socket.on('channelError', function(cause){
-          var errorMessage = document.createElement("article");
-          if(cause == "invalidChannel")
-          {
-            errorMessage.innerHTML = '<b>--Invalid Channel Selection!--</b>';
-          }
-          else if (cause =='forbiddenChannel')
-          {
-            errorMessage.innerHTML = '<b>--Forbidden Channel Selection!--</b>';
-          }
-          $('.messages').append(errorMessage);
-        })
+    // Command-Session has handled checking for errors
+    // Security will still be checked having passed that stage
+    socket.on('allowSwitchRequest', function(user, newChannel)
+    {
+      // Temp hold to switch selector
+      //  $("#my-Select option[text=" + newChannel +"]").attr("selected","selected");
 
 
-        // // Updates the channel list for users
-        // socket.on('updateChannelList', function(channelList){
-        //   // START CHANNEL UPDATE
-        //
-        //   console.log(channelList);
-        //   for(var line in channelList)
-        //   {
-        //     var channel = document.createElement("option");
-        //     channel.innerHTML = line;
-        //     $('#channels').append(channel);
-        //   }
-        //
-        //   // END CHANNEL UPDATE
-        // });
-
-        // Command-Session has handled checking for errors
-        // Security will still be checked having passed that stage
-        socket.on('allowSwitchRequest', function(user, newChannel)
-        {
-          socket.emit('switchUsersChannel', user, newChannel);
-        });
-
-        // Updates the channel list for users
-        socket.on('updateChannelList', function(channelList){
-          // START CHANNEL UPDATE
-          console.log(channelList);
-          for(var line in channelList)
-          {
-            var channel = document.createElement("option");
-            channel.innerHTML = line;
-            $('#channels').append(channel);
-          }
-          // END CHANNEL UPDATE
-        });
+      socket.emit('switchUsersChannel', user, newChannel);
+    });
 
 
-        // Updates chatlog
-        socket.on('updateChatLog', function(chatLog){
+
+    // Updates the channel list for users
+    socket.on('updateChannelList', function(channelList){
+      // START CHANNEL UPDATE
+      console.log(channelList);
+      for(var line in channelList)
+      {
+        var channel = document.createElement("option");
+        channel.innerHTML = line;
+        $('#channels').append(channel);
+      }
+      // END CHANNEL UPDATE
+    });
 
 
-          socket.emit('send message', '/clear');
+    // Updates chatlog
+    socket.on('updateChatLog', function(chatLog){
 
-          var splitMessage = chatLog.split("\n");
-          console.log(splitMessage);
+      $('.messages').empty();
 
-          for(var line in splitMessage)
-          {
-            //console.log(splitMessage[line]);
-            var txtWritten = document.createElement("article");
-            txtWritten.innerHTML = splitMessage[line];
-            $('.messages').append(txtWritten);
-          }
+      var splitMessage = chatLog.split("\n");
+      //console.log(splitMessage);
 
-        });
+      for(var line in splitMessage)
+      {
+        //console.log(splitMessage[line]);
+        var txtWritten = document.createElement("article");
+        txtWritten.innerHTML = splitMessage[line];
+        console.log(splitMessage[line]);
+        $('.messages').append(txtWritten);
+      }
+    });
 
 
-        socket.on('usernames', function(data){
-          var html = '';
-          for (i=0; i < data.length; i++){
-            html += data[i] + '<br/>'
-          }
-          $users.html(html);
-        });
+    socket.on('usernames', function(data){
+      var html = '';
+      for (i=0; i < data.length; i++){
+        html += data[i] + '<br/>'
+      }
+      $users.html(html);
+    });
 
 
     $messageForm.submit(function(e){
