@@ -104,9 +104,12 @@
 
     });
 
-    $("#channels").change(function(){
 
-      socket.emit('send message', '/join channel ' + $("#channels option:selected").text());
+
+    // Handles changing channel with selector
+    $("#channels").change(function(){
+      // Sends a standardized (without # sign) message which allows user to switch to the correct channel
+      socket.emit('send message', '/join channel ' + $("#channels option:selected").text().replace('#', ''));
     });
 
 
@@ -144,13 +147,31 @@
       {
         errorMessage.innerHTML = '<b>--Forbidden Channel Selection!--</b>';
       }
+      else if (cause =='restricted')
+      {
+        errorMessage.innerHTML = '<b>--You Do Not Have the proper Access Rights!--</b>';
+      }
+      else if (cause =='restricted')
+      {
+        errorMessage.innerHTML = '<b>--You Do Not Have the proper Access Rights!--</b>';
+      }
+      else if (cause =='userNotFound')
+      {
+        errorMessage.innerHTML = '<b>--This User Does Not Exist!--</b>';
+      }
+
       $('.messages').append(errorMessage);
     });
 
 
+
+    // Allows user to create a channel when checked by server
+    // Any user can create channels so lax
     socket.on('allowCreateRequest', function(newChannelName){
       socket.emit('createChannel', newChannelName);
     });
+
+
 
     // Command-Session has handled checking for errors
     // Security will still be checked having passed that stage
@@ -158,11 +179,16 @@
     {
       // Temp hold to switch selector
       //  $("#my-Select option[text=" + newChannel +"]").attr("selected","selected");
-
-
       socket.emit('switchUsersChannel', user, newChannel);
     });
 
+
+
+    // Requests server to update list after promotion or demotion
+    socket.on('requestUserNameUpdate', function(){
+      console.log("requested");
+      socket.emit('userNameUpdate');
+    });
 
 
     // Updates the channel list for users
