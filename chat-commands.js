@@ -1,5 +1,6 @@
 /**
  * This file defines console command logic.
+ * @Author = Francisco Ortega
  */
 module.exports = function(io, session) {
 var commands = {
@@ -17,13 +18,28 @@ var commands = {
 			else {
 				// Holds original nickname for deletion of old user's information
 				var oldNickName = user.nickname;
+				args[0] = args[0].toLowerCase();
+				chatSession.users[args[0]] = {};
 				// New username is initialized and filled with user's information
-				chatSession.users[args[0]] = user;
+
+				//Update Channel in which User is In
+				chatSession.channels[chatSession.users[oldNickName].currentChannel].currentUsers[args[0]] = true;
+				delete chatSession.channels[chatSession.users[oldNickName].currentChannel].currentUsers[oldNickName];
+				// Nickname inherited
 				chatSession.users[args[0]].nickname = args[0];
+				// Access Level inherited
+				chatSession.users[args[0]].accessLevel = chatSession.users[oldNickName].accessLevel;
+				// Socket inherited
+				chatSession.users[args[0]].socket = chatSession.users[oldNickName].socket;
+				// Socket nicknamed changed
+				chatSession.users[args[0]].socket.nickname = args[0];
+				// Current channel inherited
+				chatSession.users[args[0]].currentChannel = chatSession.users[oldNickName].currentChannel;
 				// Frees up nickname for any other user
 				delete chatSession.users[oldNickName];
 				// Sends message to user to notify server that nick has been succesfully changed
-				user.socket.emit('notifyNickChange');
+				//console.log(chatSession.users[args[0]]);
+				user.socket.emit('notifyNickChange', oldNickName, args[0]);
 			}
 		}
 	},
@@ -65,6 +81,22 @@ var commands = {
 			}
 			else {
 				user.socket.emit('allowCreateRequest', args[0].toLowerCase());
+			}
+		}
+	},
+	// Used to delete a channel
+	"leave": {
+		numArgs: 1,
+		handler: function(args, io, session, user) {
+			if(args[0] == 'channel')
+			{
+				if(user.currentChannel == 'main')
+				{
+					user.socket.emit('errorHandler', 'defaultChannel');
+				}
+				else {
+					user.socket.emit('request switch');
+				}
 			}
 		}
 	},
@@ -257,14 +289,14 @@ var run = function(user, msg) {
 	var fun = args.shift();
 
 	// Try catch in order to handle unknown/erroneous commands
-  try{
+//  try{
 		commands[fun].handler(args, io, session, user);
-  }
-	catch (err)
-	{
-		console.log(err);
-		user.socket.emit('commandError');
-	}
+//  }
+//	catch (err)
+//	{
+//		console.log(err);
+//		user.socket.emit('commandError');
+//	}
 
 }
 

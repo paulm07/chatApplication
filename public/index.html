@@ -88,7 +88,7 @@
 
     $nickFrom.submit(function(e){
       e.preventDefault();
-      socket.emit('new user', $nickBox.val(), function(callback){
+      socket.emit('new user', $nickBox.val().toLowerCase(), function(callback){
         if(callback){
           $('#nickWrap').hide();
           $('.topNav').show();
@@ -163,6 +163,10 @@
       {
         errorMessage.innerHTML = '<b>--This Nick is already Registered!--</b>';
       }
+      else if (cause =='defaultChannel')
+      {
+        errorMessage.innerHTML = '<b>--Cannot Leave Default Channel!--</b>';
+      }
 
       $('.messages').append(errorMessage);
     });
@@ -190,8 +194,8 @@
 
 
     // Notifies server of proper nick change
-    socket.on('notifyNickChange', function(){
-      socket.emit('nickChanged');
+    socket.on('notifyNickChange', function(oldNickName, newNickName){
+      socket.emit('nickChanged', oldNickName, newNickName);
     });
 
 
@@ -216,6 +220,11 @@
 
     $('.messages').append(bottomMessage);
 
+  });
+
+
+  socket.on('request switch', function(){
+    socket.emit('userLeftChannel');
   });
 
 

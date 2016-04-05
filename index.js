@@ -1,4 +1,4 @@
-// Vania Jarquin
+// Paul Molina & Vania Jarquin
 //
 
 var express = require('express');
@@ -232,28 +232,6 @@ function updateNicknames(){
 
 
 
-// HANDLES UPDATING CHAT MESSAGES
-
-/**
- * Handles user changing their channel with element
- */
-socket.on('updateChatMessages', function(newChannel){
-  // Find a way to
-  chatSession.users[socket.nickname].currentChannel = newChannel;
-
-  socket.emit('');
-
-});
-
-
-
-
-socket.on('userNameUpdate', function(){
-  updateNicknames();
-});
-
-
-
 // Will handle sending list of public channels to specific user
 function initializeChannelList(socket)
 {
@@ -281,6 +259,40 @@ function initializeChannelList(socket)
   // console.log(updatedChannelList);
   socket.emit('updateChannelList', updatedChannelList);
 }
+
+
+
+
+socket.on('nickChanged', function(oldNickName, newNickName){
+  nicknames[nicknames.indexOf(oldNickName)] = newNickName;
+  delete   nicknames[oldNickName];
+  updateNicknames();
+});
+
+
+
+// HANDLES UPDATING CHAT MESSAGES
+
+/**
+ * Handles user changing their channel with element
+ */
+socket.on('updateChatMessages', function(newChannel){
+  // Find a way to
+  chatSession.users[socket.nickname].currentChannel = newChannel;
+
+  socket.emit('');
+
+});
+
+
+
+
+socket.on('userNameUpdate', function(){
+  updateNicknames();
+});
+
+
+
 
 
 
@@ -320,30 +332,39 @@ function updateAllChannelLists()
  * Handles sending information to form
  */
 socket.on('send message', function(data){
-  if(!commands.isCommand(data))
-  {
-    // Holds the channel in which the user sent the message
-    var currentChannel = chatSession.users[socket.nickname].currentChannel;
-
-    // Adds the current message to the log of the channel as it would be displayed by the user
-    // This also takes care of making sure that the user send their chat message to the correct channel
-    chatSession.channels[currentChannel].log += '<b>' + socket.nickname + ': </b>' + data + '\n';
-
-    // Make sure to handle messaging ONLY those people in this current channel though LOOP!
-    for(user in chatSession.channels[chatSession.users[socket.nickname].currentChannel].currentUsers)
+  try {
+    if(!commands.isCommand(data))
     {
-      if(chatSession.users[user].socket === null) {
-        // HANDLES SYSOP NOT HAVING ITS SOCKET YET
+      // Holds the channel in which the user sent the message
+
+      console.log(chatSession.users);
+
+      var currentChannel = chatSession.users[socket.nickname].currentChannel;
+
+      // Adds the current message to the log of the channel as it would be displayed by the user
+      // This also takes care of making sure that the user send their chat message to the correct channel
+      chatSession.channels[currentChannel].log += '<b>' + socket.nickname + ': </b>' + data + '\n';
+
+      // Make sure to handle messaging ONLY those people in this current channel though LOOP!
+      for(user in chatSession.channels[chatSession.users[socket.nickname].currentChannel].currentUsers)
+      {
+        if(chatSession.users[user].socket === null) {
+          // HANDLES SYSOP NOT HAVING ITS SOCKET YET
+        }
+        else{
+        io.to(chatSession.users[user].socket.id).emit('new message', {msg: data, nick: socket.nickname});
       }
-      else{
-      io.to(chatSession.users[user].socket.id).emit('new message', {msg: data, nick: socket.nickname});
+      }
     }
+    else {
+      commands.run(chatSession.users[socket.nickname], data);
     }
+    //TO BROADCAST socket.BROADCAST.emit('new message', data);
+  } catch (e) {
+    console.log(e);
+
   }
-  else {
-    commands.run(chatSession.users[socket.nickname], data);
-  }
-  //TO BROADCAST socket.BROADCAST.emit('new message', data);
+
 });
 
 
@@ -356,10 +377,10 @@ socket.on('send message', function(data){
 */
 socket.on('switchUsersChannel', function(user, newChannelName){
   // Handles removing user from previous channel
-  console.log(user + " " + newChannelName);
+  //console.log(user + " " + newChannelName);
   //console.log(chatSession.users[user]);
   var oldChannel = chatSession.users[user].currentChannel;
-  console.log(oldChannel);
+  //console.log(oldChannel);
   // Removes user from channel list for easier distribution of messages
   delete chatSession.channels[oldChannel].currentUsers[user];
 
@@ -373,6 +394,33 @@ socket.on('switchUsersChannel', function(user, newChannelName){
 
   // Updates user's current chatlog to the correct one
   io.to(chatSession.users[user].socket.id).emit('updateChatLog', chatSession.channels[newChannelName].log);
+});
+
+
+/**
+ * Handles switching a user from one channel to another
+ *
+ * SECURITY CHECKS TO BE ADDED LATER
+*/
+socket.on('userLeftChannel', function(){
+  // Handles removing user from previous channel
+  //console.log(user + " " + newChannelName);
+  //console.log(chatSession.users[user]);
+  var oldChannel = chatSession.users[socket.nickname].currentChannel;
+  //console.log(oldChannel);
+  // Removes user from channel list for easier distribution of messages
+  delete chatSession.channels[oldChannel].currentUsers[socket.nickname];
+
+  // Handles adding user to new channel's current users list
+  chatSession.channels['main'].currentUsers[socket.nickname] = true;
+
+  // Changes user's current channel to the new one
+  chatSession.users[socket.nickname].currentChannel = 'main';
+
+  //console.log(chatSession.channels[newChannelName].log);
+
+  // Updates user's current chatlog to the correct one
+  io.to(chatSession.users[socket.nickname].socket.id).emit('updateChatLog', chatSession.channels['main'].log);
 });
 
 
