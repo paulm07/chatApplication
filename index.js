@@ -240,14 +240,16 @@ function updateNicknames(){
 /**
 * A broadcast sent by the sysOP sent through every channel.
 */
-function broadcast(messageToBroadcast)
+function broadcast(messageToBroadcast, sysopNickName)
 {
   var messageToBroadcast = messageToBroadcast.substring(10);
 
   for(channel in chatSession.channels)
   {
-    chatSession.channels[channel].log += '<b>' + sysopName + ': </b>' + messageToBroadcast + '\n';
+    chatSession.channels[channel].log += '<b>' + sysopNickName + ': </b>' + messageToBroadcast + '\n';
   }
+
+  io.emit('new message', {msg: messageToBroadcast, nick: sysopNickName});
 }
 
 
@@ -417,22 +419,23 @@ socket.on('send message', function(data){
   try {
 
     // Handles both broadcast and private messages
-    var split = data.split(' ');
+    var split = data.split(" ");
+    console.log(data);
     //
-    if(data[0] == '/broadcast');
+    if(split[0] == '/broadcast')
     {
-      if(socket.accessLevel == 0)
+      if(chatSession.users[socket.nickname].accessLevel == 0)
       {
-        broadcast(data);
+        broadcast(data, socket.nickname);
       }
       else
       {
         io.to(socket.id).emit('errorHandler', 'restricted');
       }
     }
-    else
+    else if(split[0] == '/msg')
     {
-
+      // Hello
     }
     else if(!commands.isCommand(data))
     {
