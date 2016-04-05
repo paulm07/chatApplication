@@ -56,6 +56,11 @@ var commands = {
 			user.socket.emit('message', '/nick <nickname> - change your username\n /clear - clear your chat log.');
 		}
 	},
+
+
+
+	//Broadcast by Admin
+	
 	// Creates a New Channel
 	"createChannel": {
 		numArgs: 1,
