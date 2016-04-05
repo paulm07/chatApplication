@@ -47,10 +47,12 @@ main {
       width: 200px; }
     .chat-panel__messages {
       background: orange;
-      height: 100px;
-      overflow: auto;
       -webkit-box-flex: 1;
       flex: 1; }
+      .messages{
+        height: auto;
+        overflow: auto;
+      }
   .chat-ui {
     display: -webkit-box;
     display: flex; }

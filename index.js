@@ -9,6 +9,7 @@ var io = require('socket.io')(http);
 var chatSession = require('./chat-session');
 // Holds commands object to handle user's command requests
 var commands = require('./chat-commands')(io, chatSession);
+var sysopName = "";
 nicknames = [];
 
 http.listen(3000, function(){
@@ -204,10 +205,6 @@ socket.on('addPrivateChannel', function(otherUsersName){
 
 
 
-// FINISH SOON
-
-
-
 
 /**
  * Handles updating nickname list for all users. Takes into account whether users
@@ -238,6 +235,20 @@ function updateNicknames(){
   io.sockets.emit('usernames', formattedNickNames);
 }
 
+
+
+/**
+* A broadcast sent by the sysOP sent through every channel.
+*/
+function broadcast(messageToBroadcast)
+{
+  var messageToBroadcast = messageToBroadcast.substring(10);
+
+  for(channel in chatSession.channels)
+  {
+    chatSession.channels[channel].log += '<b>' + sysopName + ': </b>' + messageToBroadcast + '\n';
+  }
+}
 
 
 
@@ -364,9 +375,12 @@ socket.on('deleteChannel', function(channelToDelete){
 
 // Handles When user has changed their nickname. Removes the old newNickName
 // From the list of nicknames to ensure that user's nicknames are current
-// th to echange
 socket.on('nickChanged', function(oldNickName, newNickName){
   nicknames[nicknames.indexOf(oldNickName)] = newNickName;
+  if(chatSession.users[newNickName].accessLevel == 0)
+  {
+    sysopName = newNickName;
+  }
   delete   nicknames[oldNickName];
   updateNicknames();
 });
@@ -401,7 +415,26 @@ socket.on('userNameUpdate', function(){
  */
 socket.on('send message', function(data){
   try {
-    if(!commands.isCommand(data))
+
+    // Handles both broadcast and private messages
+    var split = data.split(' ');
+    //
+    if(data[0] == '/broadcast');
+    {
+      if(socket.accessLevel == 0)
+      {
+        broadcast(data);
+      }
+      else
+      {
+        io.to(socket.id).emit('errorHandler', 'restricted');
+      }
+    }
+    else
+    {
+
+    }
+    else if(!commands.isCommand(data))
     {
       // Holds the channel in which the user sent the message
 

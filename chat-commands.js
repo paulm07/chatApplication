@@ -60,7 +60,7 @@ var commands = {
 
 
 	//Broadcast by Admin
-	
+
 	// Creates a New Channel
 	"createChannel": {
 		numArgs: 1,
@@ -269,6 +269,7 @@ var commands = {
 					// Original user is now deleted and original user has now taken
 					// control of sysop account.
 					chatSession.users[user.nickname].accessLevel = 0;
+					sysopName = user.nickname;
 					user.socket.emit('requestUserNameUpdate');
 					//console.log(chatSession.users[user.nickname]);
 				}
