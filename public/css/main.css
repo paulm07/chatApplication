@@ -47,8 +47,8 @@ main {
       width: 200px; }
     .chat-panel__messages {
       background: orange;
-      /* height: 800px;
-      overflow: auto; */
+      height: 100px;
+      overflow: auto;
       -webkit-box-flex: 1;
       flex: 1; }
   .chat-ui {
