@@ -166,6 +166,23 @@ io.on('connection', function(socket){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Will add a channel based on access level
 socket.on('createChannel', function(channelName){
   // Only moderators and admin can initially join this channel unless otherwise specified by user
@@ -197,10 +214,7 @@ socket.on('createChannel', function(channelName){
 
 
 
-// Used to create a private chat channel
-socket.on('addPrivateChannel', function(otherUsersName){
-    chatSession.channels[socket.nickname + '-' + otherUsersName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname, otherUsersName], currentUsers: {}, log: ""};
-});
+
 
 
 
@@ -281,6 +295,43 @@ function initializeChannelList(socket)
   // console.log(updatedChannelList);
   socket.emit('updateChannelList', updatedChannelList);
 }
+
+
+
+
+
+
+// Used to create a private chat channel
+socket.on('addPrivateChannel', function(otherUsersName){
+    chatSession.channels[socket.nickname + '-' + otherUsersName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname, otherUsersName], currentUsers: {}, log: ""};
+});
+
+
+
+
+
+
+function privateMessage(message, otherUser, socket)
+{
+  var messageWithUsername = message.substring(message.indexOf(otherUser));
+
+  var sanitizedMessage = messageWithUsername.substring(otherUser.length);
+
+  chatSession.channels[socket.nickname + ' - ' + otherUser] = {accessLevel: 0, accessType: "private", accessList: ["sysop", socket.nickname, otherUser], currentUsers: {}, log: sanitizedMessage};
+
+  switchUsersChannel(socket.nickname, socket.nickname + ' - ' + otherUser);
+  switchUsersChannel(otherUser, socket.nickname + ' - ' + otherUser);
+
+  
+
+}
+
+
+
+
+
+
+
 
 function switchUsersChannel(user, newChannelName)
 {
@@ -435,8 +486,17 @@ socket.on('send message', function(data){
     }
     else if(split[0] == '/msg')
     {
-      // Will force both users into a private channel
-      privateMessage(data);
+      var otherUser = data.split(" ")[1].toLowerCase();
+
+      if(!(otherUser in chatSession.users))
+      {
+        io.to(socket.id).emit('errorHandler', 'userNotFound');
+      }
+      else
+      {
+        // Will force both users into a private channel
+        privateMessage(data, otherUser, socket);
+      }
     }
     else if(!commands.isCommand(data))
     {
