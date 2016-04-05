@@ -61,6 +61,24 @@ io.on('connection', function(socket){
     chatSession.channels["fiu"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##fiu</b> channel--</h3>\n"};
     chatSession.channels["webappdevelopment"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##webappdevelopment</b> channel--</h3>\n"};
 
+    chatSession.users['sysbot'] = {
+      nickname: 'sysbot',
+      //tabs: 0,
+      accessLevel: 0,
+      isModerator: false,
+      socket: socket,
+      currentChannel: "main"
+    };
+
+    chatSession.users['smartbot'] = {
+      nickname: 'smartbot',
+      //tabs: 0,
+      accessLevel: 0,
+      isModerator: false,
+      socket: socket,
+      currentChannel: "main"
+    };
+
     // Handles switching sysOP to main channel from the beginning
     // Should probably switch to a function to avoid emitting
     // chatSession.channels["main"].currentUsers["sysOP"] = true;
@@ -189,17 +207,17 @@ socket.on('createChannel', function(channelName){
   if(chatSession.users[socket.nickname].accessLevel === 0)
   {
     var newChannelWelcomeMessage = "<h3>--Welcome to the <b>##"+ channelName + "</b> channel--</h3>\n";
-    chatSession.channels[channelName] = {accessLevel: 0, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: newChannelWelcomeMessage};
+    chatSession.channels[channelName] = {accessLevel: 0, accessType: "public", accessList: ["sysop", "smartbot", "sysbot", socket.nickname], currentUsers: {}, log: newChannelWelcomeMessage};
   }
   else if(chatSession.users[socket.nickname].accessLevel == 1)
   {
     var newChannelWelcomeMessage = "<h3>--Welcome to the <b>##"+ channelName + "</b> channel--</h3>\n";
-    chatSession.channels[channelName] = {accessLevel: 1, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: newChannelWelcomeMessage};
+    chatSession.channels[channelName] = {accessLevel: 1, accessType: "public", accessList: ["sysop", "smartbot", "sysbot", socket.nickname], currentUsers: {}, log: newChannelWelcomeMessage};
   }
   // Everyone can join this as it was created by a user
   else {
     var newChannelWelcomeMessage = "<h3>--Welcome to the <b>#"+ channelName + "</b> channel--</h3>\n";
-    chatSession.channels[channelName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: newChannelWelcomeMessage};
+    chatSession.channels[channelName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", "smartbot", "sysbot", socket.nickname], currentUsers: {}, log: newChannelWelcomeMessage};
   }
 
   // Switch Users Channel to the correct one once they create it
@@ -303,7 +321,7 @@ function initializeChannelList(socket)
 
 // Used to create a private chat channel
 socket.on('addPrivateChannel', function(otherUsersName){
-    chatSession.channels[socket.nickname + '-' + otherUsersName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname, otherUsersName], currentUsers: {}, log: ""};
+    chatSession.channels[socket.nickname + '-' + otherUsersName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname, otherUsersName], currentUsers: {sysbot: true, smartbot: true}, log: ""};
 });
 
 
@@ -319,14 +337,31 @@ function privateMessage(message, otherUser, socket)
 
   chatSession.channels[socket.nickname + ' - ' + otherUser] = {accessLevel: 0, accessType: "private", accessList: ["sysop", socket.nickname, otherUser], currentUsers: {}, log: sanitizedMessage};
 
-  switchUsersChannel(socket.nickname, socket.nickname + ' - ' + otherUser);
-  switchUsersChannel(otherUser, socket.nickname + ' - ' + otherUser);
-
-  
+  if(otherUser == 'smartbot')
+  {
+    smartBotProcess(sanitizedMessage, socket);
+  }
+  else if(otherUser == 'sysbot')
+  {
+    sysBotProcess(sanitizedMessage, socket);
+  }
+  else {
+    switchUsersChannel(socket.nickname, socket.nickname + ' - ' + otherUser);
+    switchUsersChannel(otherUser, socket.nickname + ' - ' + otherUser);
+  }
+  // console.log(otherUser);
 
 }
 
 
+
+function sysBotProcess(message, socket)
+{
+  if(message == "help")
+  {
+    io.to(chatSession.users[socket.nickname].socket.id).emit('new messsage', {msg: '<br>/list <br>/list string <br>/msg <br>/nick <br>/quit <br>/join channel <br>/leave channel <br>/createChannel <br>removeChannel', msg: 'smartBot'});
+  }
+}
 
 
 
