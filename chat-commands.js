@@ -66,21 +66,22 @@ var commands = {
 				user.socket.emit('errorHandler', 'channelExists');
 			}
 			else {
+
 				user.socket.emit('allowCreateRequest', args[0].toLowerCase());
 			}
 		}
 	},
 	// Used to delete a channel
-	"deleteChannel": {
+	"removeChannel": {
 		numArgs: 1,
 		handler: function(args, io, session, user) {
 			if(args[0].toLowerCase() in session.channels)
 			{
 				console.log("channel exists!");
-				user.socket.emit('errorHandler', 'channelExists');
+				user.socket.emit('deletionRequest', args[0]);
 			}
 			else {
-				user.socket.emit('allowCreateRequest', args[0].toLowerCase());
+				user.socket.emit('errorHandler', 'invalidChannel');
 			}
 		}
 	},
@@ -289,14 +290,14 @@ var run = function(user, msg) {
 	var fun = args.shift();
 
 	// Try catch in order to handle unknown/erroneous commands
-//  try{
-		commands[fun].handler(args, io, session, user);
-//  }
-//	catch (err)
-//	{
-//		console.log(err);
-//		user.socket.emit('commandError');
-//	}
+ try{
+	commands[fun].handler(args, io, session, user);
+ }
+	catch (err)
+	{
+		console.log(err);
+		user.socket.emit('commandError');
+	}
 
 }
 

@@ -129,6 +129,14 @@
 
 
 
+
+    // Emits message to server when user has decided to delete a server
+    socket.on('deletionRequest', function(channelToDelete){
+      socket.emit('deleteChannel', channelToDelete);
+    });
+
+
+
     // Handles command errors when user inputs erroneous channel command
     socket.on('errorHandler', function(cause){
       var errorMessage = document.createElement("article");
@@ -177,17 +185,32 @@
     // Any user can create channels so lax
     socket.on('allowCreateRequest', function(newChannelName){
       socket.emit('createChannel', newChannelName);
+      changeChannelOption(newChannelName);
     });
 
 
 
     // Command-Session has handled checking for errors
     // Security will still be checked having passed that stage
-    socket.on('allowSwitchRequest', function(user, newChannel)
+    socket.on('allowSwitchRequest', function(user, newChannelName)
     {
-      // Temp hold to switch selector
-      //  $("#my-Select option[text=" + newChannel +"]").attr("selected","selected");
-      socket.emit('switchUsersChannel', user, newChannel);
+    //   var channelDisplayedName = "";
+    //   console.log('start');
+    //   $("#channels option").each(function() {
+    //     console.log(this.text);
+    //     if(this.text.indexOf(newChannelName) > -1)
+    //     {
+    //       channelDisplayedName = this.text;
+    //
+    //     }
+    // });
+    //
+    //
+    //   // Temp hold to switch selector
+    //   $("#channels").val(channelDisplayedName);
+
+      changeChannelOption(newChannelName);
+      socket.emit('switchUsersChannel', user, newChannelName);
     });
 
 
@@ -252,7 +275,8 @@
     });
 
 
-    // Updates chatlog
+    // Updates chatlog based on whichever channel is currently
+    // being used by user
     socket.on('updateChatLog', function(chatLog){
 
       $('.messages').empty();
@@ -268,6 +292,14 @@
         console.log(splitMessage[line]);
         $('.messages').append(txtWritten);
       }
+    });
+
+
+
+    // In case the user did not update the selector, server asks user to do
+    // so anyway when channel is created
+    socket.on('updateSelector', function(newChannelName){
+      changeChannelOption(newChannelName);
     });
 
 
@@ -294,6 +326,24 @@
         txtWritten.innerHTML = '<b>' + data.nick + ': </b>' + data.msg;
         $('.messages').append(txtWritten);
       });
+
+      function changeChannelOption(newChannelName)
+      {
+        var channelDisplayedName = "";
+        console.log('start');
+        $("#channels option").each(function() {
+          //console.log(this.text);
+          if(this.text.indexOf(newChannelName) > -1)
+          {
+            channelDisplayedName = this.text;
+
+          }
+      });
+
+
+        // Temp hold to switch selector
+        $("#channels").val(channelDisplayedName);
+      }
 
 
       </script>

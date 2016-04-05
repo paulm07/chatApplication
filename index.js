@@ -184,12 +184,21 @@ socket.on('createChannel', function(channelName){
     chatSession.channels[channelName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: newChannelWelcomeMessage};
   }
 
+  // Switch Users Channel to the correct one once they create it
+  switchUsersChannel(socket.nickname, channelName);
+  // Ensures that all channel lists are properly loaded
   updateAllChannelLists();
+  // Ensures that user goes to correct place once
+  io.to(socket.id).emit('updateSelector', channelName);
+
 
 });
 
+
+
+// Used to create a private chat channel
 socket.on('addPrivateChannel', function(otherUsersName){
-    chatSession.channels[socket.nickname + '-' + otherUsersName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname], currentUsers: {}, log: ""};
+    chatSession.channels[socket.nickname + '-' + otherUsersName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", socket.nickname, otherUsersName], currentUsers: {}, log: ""};
 });
 
 
@@ -260,41 +269,19 @@ function initializeChannelList(socket)
   socket.emit('updateChannelList', updatedChannelList);
 }
 
-
-
-
-socket.on('nickChanged', function(oldNickName, newNickName){
-  nicknames[nicknames.indexOf(oldNickName)] = newNickName;
-  delete   nicknames[oldNickName];
-  updateNicknames();
-});
-
-
-
-// HANDLES UPDATING CHAT MESSAGES
-
-/**
- * Handles user changing their channel with element
- */
-socket.on('updateChatMessages', function(newChannel){
-  // Find a way to
-  chatSession.users[socket.nickname].currentChannel = newChannel;
-
-  socket.emit('');
-
-});
-
-
-
-
-socket.on('userNameUpdate', function(){
-  updateNicknames();
-});
-
-
-
-
-
+function switchUsersChannel(user, newChannelName)
+{
+  // Handles removing user from previous channel
+  var oldChannel = chatSession.users[user].currentChannel;
+  // Removes user from channel list for easier distribution of messages
+  delete chatSession.channels[oldChannel].currentUsers[user];
+  // Handles adding user to new channel's current users list
+  chatSession.channels[newChannelName].currentUsers[user] = true;
+  // Changes user's current channel to the new one
+  chatSession.users[user].currentChannel = newChannelName;
+  // Updates user's current chatlog to the correct one
+  io.to(chatSession.users[user].socket.id).emit('updateChatLog', chatSession.channels[newChannelName].log);
+}
 
 
 // Will handle sending list of public channels to specific user
@@ -324,6 +311,87 @@ function updateAllChannelLists()
   // console.log(updatedChannelList);
   io.emit('updateChannelList', updatedChannelList);
 }
+
+
+
+
+socket.on('deleteChannel', function(channelToDelete){
+
+  var channelUnderContention = chatSession.channels[channelToDelete];
+  var userRequestingChannelDeletion = chatSession.users[socket.nickname];
+
+
+
+  // If this fires off, the user does not have the proper rights to delete the channel
+  if(channelUnderContention.accessLevel < userRequestingChannelDeletion.accessLevel || channelUnderContention.accessList.indexOf(socket.nickname) < 0)
+  {
+    socket.emit('errorHandler', 'restricted');
+  }
+  else {
+    for(user in channelUnderContention.currentUsers)
+    {
+      // Handles removing user from previous channel
+      var oldChannel = chatSession.users[user].currentChannel;
+      //console.log(oldChannel);
+      // Removes user from channel list for easier distribution of messages
+      delete chatSession.channels[oldChannel].currentUsers[user];
+
+      // Handles adding user to new channel's current users list
+      chatSession.channels['main'].currentUsers[user] = true;
+
+      // Changes user's current channel to the new one
+      chatSession.users[user].currentChannel = 'main';
+
+      //console.log(chatSession.channels[newChannelName].log);
+
+      // Updates user's current chatlog to the correct one
+      io.to(chatSession.users[user].socket.id).emit('updateChatLog', chatSession.channels['main'].log);
+    }
+
+    // Ensures that everyone who was switched out of the current channel now has the correct channel list
+
+    // Actually deletes the channel from the list after all users have been transferred
+    delete chatSession.channels[channelToDelete];
+    // Updates all channel lists
+    updateAllChannelLists();
+    // Updates all selectors to ensure users are on the right channels
+    io.to(socket.id).emit('updateSelector', channelName);
+  }
+});
+
+
+
+
+// Handles When user has changed their nickname. Removes the old newNickName
+// From the list of nicknames to ensure that user's nicknames are current
+// th to echange
+socket.on('nickChanged', function(oldNickName, newNickName){
+  nicknames[nicknames.indexOf(oldNickName)] = newNickName;
+  delete   nicknames[oldNickName];
+  updateNicknames();
+});
+
+
+
+// HANDLES UPDATING CHAT MESSAGES
+
+/**
+ * Handles user changing their channel with element
+ */
+socket.on('updateChatMessages', function(newChannel){
+  // Find a way to
+  chatSession.users[socket.nickname].currentChannel = newChannel;
+
+  socket.emit('');
+
+});
+
+
+
+
+socket.on('userNameUpdate', function(){
+  updateNicknames();
+});
 
 
 
@@ -377,21 +445,13 @@ socket.on('send message', function(data){
 */
 socket.on('switchUsersChannel', function(user, newChannelName){
   // Handles removing user from previous channel
-  //console.log(user + " " + newChannelName);
-  //console.log(chatSession.users[user]);
   var oldChannel = chatSession.users[user].currentChannel;
-  //console.log(oldChannel);
   // Removes user from channel list for easier distribution of messages
   delete chatSession.channels[oldChannel].currentUsers[user];
-
   // Handles adding user to new channel's current users list
   chatSession.channels[newChannelName].currentUsers[user] = true;
-
   // Changes user's current channel to the new one
   chatSession.users[user].currentChannel = newChannelName;
-
-  //console.log(chatSession.channels[newChannelName].log);
-
   // Updates user's current chatlog to the correct one
   io.to(chatSession.users[user].socket.id).emit('updateChatLog', chatSession.channels[newChannelName].log);
 });
@@ -404,8 +464,6 @@ socket.on('switchUsersChannel', function(user, newChannelName){
 */
 socket.on('userLeftChannel', function(){
   // Handles removing user from previous channel
-  //console.log(user + " " + newChannelName);
-  //console.log(chatSession.users[user]);
   var oldChannel = chatSession.users[socket.nickname].currentChannel;
   //console.log(oldChannel);
   // Removes user from channel list for easier distribution of messages
