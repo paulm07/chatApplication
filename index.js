@@ -246,10 +246,10 @@ function broadcast(messageToBroadcast, sysopNickName)
 
   for(channel in chatSession.channels)
   {
-    chatSession.channels[channel].log += '<b>' + sysopNickName + ': </b>' + messageToBroadcast + '\n';
+    chatSession.channels[channel].log += '<i><b style="color: blue">' + "sysOP" + ': ' + messageToBroadcast + '</b></i>\n';
   }
 
-  io.emit('new message', {msg: messageToBroadcast, nick: sysopNickName});
+  io.emit('new message', {msg: '**** ' + messageToBroadcast + ' ****</b></i>', nick: '<i><b style="color: blue">sysOP'});
 }
 
 
@@ -435,7 +435,8 @@ socket.on('send message', function(data){
     }
     else if(split[0] == '/msg')
     {
-      // Hello
+      // Will force both users into a private channel
+      privateMessage(data);
     }
     else if(!commands.isCommand(data))
     {
