@@ -190,7 +190,9 @@
 
 
     // Notifies server of proper nick change
-    socket.on('notifyNickChange'
+    socket.on('notifyNickChange', function(){
+      socket.emit('nickChanged');
+    });
 
 
     // Updates chatlog
