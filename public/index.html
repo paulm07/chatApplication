@@ -159,6 +159,10 @@
       {
         errorMessage.innerHTML = '<b>--This User Does Not Exist!--</b>';
       }
+      else if (cause =='nickNameTaken')
+      {
+        errorMessage.innerHTML = '<b>--This Nick is already Registered!--</b>';
+      }
 
       $('.messages').append(errorMessage);
     });
@@ -185,6 +189,10 @@
 
 
 
+    // Notifies server of proper nick change
+    socket.on('notifyNickChange'
+
+
     // Updates chatlog
     socket.on('printChannelList', function(channelList){
 
@@ -192,22 +200,6 @@
       var topMessage = document.createElement("article");
       topMessage.innerHTML = "<br/><b>--Current Channels--</b>";
       $('.messages').append(topMessage);
-
-
-      //var splitMessage = channelList.split("\n");
-      //console.log(splitMessage);
-
-    //   for(var line in splitMessage)
-    //   {
-    //     //console.log(splitMessage[line]);
-    //     var txtWritten = document.createElement("article");
-    //     txtWritten.innerHTML = splitMessage[line];
-    //     //console.log(splitMessage[line]);
-    //     $('.messages').append(txtWritten);
-    //
-    //
-    //
-    // }
 
     for(var line in channelList)
     {

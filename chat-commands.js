@@ -7,9 +7,24 @@ var commands = {
 	"nick": {
 		numArgs: 1,
 		handler: function(args, io, chatSession, user) {
-			user.nick = args[0];
-			session.users[user.uuid] = user;
-			io.sockets.emit('nickname', user.nick);
+			if(args[0].toLowerCase() in chatSession.users)
+			{
+				user.socket.emit('errorHandler', 'nickNameTaken');
+			}
+			// else if(args[0].toLowerCase() in reservedNickNames){
+			// 	user.socket.emit('errorHandler', 'reservedNickNames');
+			// }
+			else {
+				// Holds original nickname for deletion of old user's information
+				var oldNickName = user.nickname;
+				// New username is initialized and filled with user's information
+				chatSession.users[args[0]] = user;
+				chatSession.users[args[0]].nickname = args[0];
+				// Frees up nickname for any other user
+				delete chatSession.users[oldNickName];
+				// Sends message to user to notify server that nick has been succesfully changed
+				user.socket.emit('notifyNickChange');
+			}
 		}
 	},
 	"clear": {
