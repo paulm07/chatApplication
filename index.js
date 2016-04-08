@@ -1,5 +1,10 @@
-// Paul Molina & Vania Jarquin
-//
+/**
+ * @author: Paul Molina
+ * @author: Vania Jarquin
+ *
+ * This file handles the server's function in the chat program. The users never
+ * actually interact with the server.
+ */
 
 var express = require('express');
 var app = express();
@@ -61,6 +66,7 @@ io.on('connection', function(socket){
     chatSession.channels["fiu"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##fiu</b> channel--</h3>\n"};
     chatSession.channels["webappdevelopment"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##webappdevelopment</b> channel--</h3>\n"};
 
+    // Initializes sysbot
     chatSession.users['sysbot'] = {
       nickname: 'sysbot',
       //tabs: 0,
@@ -70,6 +76,7 @@ io.on('connection', function(socket){
       currentChannel: "main"
     };
 
+    // Initializes smartbot
     chatSession.users['smartbot'] = {
       nickname: 'smartbot',
       //tabs: 0,
@@ -78,15 +85,6 @@ io.on('connection', function(socket){
       socket: socket,
       currentChannel: "main"
     };
-
-    // Handles switching sysOP to main channel from the beginning
-    // Should probably switch to a function to avoid emitting
-    // chatSession.channels["main"].currentUsers["sysOP"] = true;
-    // chatSession.users["sysOP"].currentChannel = "main";
-    //console.log(chatSession.users["sysOP"]);
-
-    // Adds sysOP to the user list and adds appropriate flair
-    // nicknames.push(chatSession.users["sysOP"].nickname);
   }
 
 
@@ -95,10 +93,9 @@ io.on('connection', function(socket){
 
   /* START USERNAME REGISTRATION PROTOCOL*/
 
+
   //socket is for the client
   socket.on('new user', function(data, callback){
-
-
     // Handles whether nickname exists or not. If the nickname exists at
     // registration, the nickname will be accepted but appended with a random
     // number between and 9999
@@ -507,22 +504,25 @@ socket.on('send message', function(data){
     // Handles both broadcast and private messages
     var split = data.split(" ");
     console.log(data);
-    //
+    // Handles broadcast made by sysop
     if(split[0] == '/broadcast')
     {
+      // Checks to see if the user who just sent the message is the sysop
       if(chatSession.users[socket.nickname].accessLevel == 0)
       {
         broadcast(data, socket.nickname);
       }
+      // Shoots off an error if the user is restricted
       else
       {
         io.to(socket.id).emit('errorHandler', 'restricted');
       }
     }
+    // Will handle private messaging between users
     else if(split[0] == '/msg')
     {
       var otherUser = data.split(" ")[1].toLowerCase();
-
+      // Will check to make sure that the user exists. If they don't, an error will shoot off.
       if(!(otherUser in chatSession.users))
       {
         io.to(socket.id).emit('errorHandler', 'userNotFound');
@@ -536,9 +536,6 @@ socket.on('send message', function(data){
     else if(!commands.isCommand(data))
     {
       // Holds the channel in which the user sent the message
-
-      console.log(chatSession.users);
-
       var currentChannel = chatSession.users[socket.nickname].currentChannel;
 
       // Adds the current message to the log of the channel as it would be displayed by the user
@@ -597,25 +594,20 @@ socket.on('switchUsersChannel', function(user, newChannelName){
 socket.on('userLeftChannel', function(){
   // Handles removing user from previous channel
   var oldChannel = chatSession.users[socket.nickname].currentChannel;
-  //console.log(oldChannel);
   // Removes user from channel list for easier distribution of messages
   delete chatSession.channels[oldChannel].currentUsers[socket.nickname];
-
   // Handles adding user to new channel's current users list
   chatSession.channels['main'].currentUsers[socket.nickname] = true;
-
   // Changes user's current channel to the new one
   chatSession.users[socket.nickname].currentChannel = 'main';
-
-  //console.log(chatSession.channels[newChannelName].log);
-
   // Updates user's current chatlog to the correct one
   io.to(chatSession.users[socket.nickname].socket.id).emit('updateChatLog', chatSession.channels['main'].log);
 });
 
-
-
-
+/**
+ * Handles what happens when a user disconnects from chat
+ *
+ */
 socket.on('disconnect', function(data){
   if(!socket.nickname) return;
   nicknames.splice(nicknames.indexOf(socket.nickname), 1);

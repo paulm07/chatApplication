@@ -2,27 +2,27 @@
  * This file defines console command logic.
  * @Author = Francisco Ortega
  */
+ 
 module.exports = function(io, session) {
 var commands = {
-	// Handles changing nick
+	// Handles changing player's nick
 	"nick": {
 		numArgs: 1,
 		handler: function(args, io, chatSession, user) {
+			// Will shoot off an error if the username has already been taken
+			// by someone.
 			if(args[0].toLowerCase() in chatSession.users)
 			{
 				user.socket.emit('errorHandler', 'nickNameTaken');
 			}
-			// else if(args[0].toLowerCase() in reservedNickNames){
-			// 	user.socket.emit('errorHandler', 'reservedNickNames');
-			// }
-			else {
+			else
+			{
 				// Holds original nickname for deletion of old user's information
 				var oldNickName = user.nickname;
 				args[0] = args[0].toLowerCase();
 				chatSession.users[args[0]] = {};
-				// New username is initialized and filled with user's information
 
-				//Update Channel in which User is In
+				// Updates the channel's current user list to show nick change
 				chatSession.channels[chatSession.users[oldNickName].currentChannel].currentUsers[args[0]] = true;
 				delete chatSession.channels[chatSession.users[oldNickName].currentChannel].currentUsers[oldNickName];
 				// Nickname inherited
@@ -38,18 +38,21 @@ var commands = {
 				// Frees up nickname for any other user
 				delete chatSession.users[oldNickName];
 				// Sends message to user to notify server that nick has been succesfully changed
-				//console.log(chatSession.users[args[0]]);
 				user.socket.emit('notifyNickChange', oldNickName, args[0]);
+
 			}
 		}
 	},
+	// Clears the user's chat window
 	"clear": {
 		numArgs: 0,
 		handler: function(args, io, session, user) {
-			session.log = "";
+			// session.log = ""; // Deprecated variable
+			// Emits clear message to user
 			user.socket.emit('clear');
 		}
 	},
+
 	"help": {
 		numArgs: 0,
 		handler: function(args, io, session, user) {
