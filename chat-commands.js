@@ -5,15 +5,15 @@
 
 module.exports = function(io, session) {
 var commands = {
-	// Handles changing player's nick
-	":Time": {
-		numArgs: 0,
-		handler: function(args, io, chatSession, user) {
-			// Will shoot off an error if the username has already been taken
-			// by someone.
-			console.log("Time!!");
-		}
-	},
+	// // Handles changing player's nick
+	// ":Time": {
+	// 	numArgs: 0,
+	// 	handler: function(args, io, chatSession, user) {
+	// 		// Will shoot off an error if the username has already been taken
+	// 		// by someone.
+	// 		//console.log("Time!!");
+	// 	}
+	// },
 	// Handles changing player's nick
 	"nick": {
 		numArgs: 1,
