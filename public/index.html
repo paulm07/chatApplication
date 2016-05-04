@@ -74,6 +74,19 @@
     var $messageBox = $('.messageInput');
     var $chat = $('#chat');
 
+    /* START OF WEB SOCKET LOGIC */
+    var ws = new WebSocket('ws://localhost:8181');
+    ws.onopen = function(e) {
+      console.log('Connection to server opened');
+    }
+
+    ws.onmessage = function(e) {
+      console.log(e.data);
+      $('.messages').append(e.data);
+    };
+
+    /* END OF WEB SOCKET LOGIC */
+
     $(function(){
       $('#nickWrap').show();
       $('.topNav').hide();
@@ -312,9 +325,16 @@
     });
 
 
+
     $messageForm.submit(function(e){
       e.preventDefault();
       socket.emit('send message', $messageBox.val());
+
+      /* HANDLES WEB SOCKET CHANGES */
+      ws.send($messageBox.val());
+      /* HANDLES WEB SOCKET CHANGES */
+
+      /* FINISH HANDLING WEB SOCKET CHANGES */
       $messageBox.val('');
       //return false;
       });

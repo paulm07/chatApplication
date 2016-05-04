@@ -4,9 +4,18 @@
  *
  * This file handles the server's function in the chat program. The users never
  * actually interact with the server.
- * 
+ *
  * Chat Program #3
  */
+
+
+
+ /* Web Socket Addition */
+var WebSocketServer = require('ws').Server;
+var wss = new WebSocketServer({port: 8181});
+ /* End Web Socket Addition */
+
+
 
 var express = require('express');
 var app = express();
@@ -22,6 +31,30 @@ nicknames = [];
 http.listen(3000, function(){
   console.log('listening on *:3000');
 });
+
+wss.on('connection', function(ws) {
+  console.log('client has connected');
+  ws.on('message', function(message){
+    console.log(message);
+
+    if(message == '\\:Time')
+    {
+      ws.send("<b>The current time and date on the server is: " + Date() + "</b>");
+      //console.log("Getting the message");
+
+    }
+    else if(message == '\\:Weather')
+    {
+
+    }
+    else if(message == '\\:Jemes')
+    {
+
+    }
+
+  });
+});
+
 
 //Creating route to root dir REQUEST RESPONSE
 app.use(express.static(__dirname + '/public'));
@@ -505,7 +538,7 @@ socket.on('send message', function(data){
 
     // Handles both broadcast and private messages
     var split = data.split(" ");
-    console.log(data);
+    //console.log(data);
     // Handles broadcast made by sysop
     if(split[0] == '/broadcast')
     {

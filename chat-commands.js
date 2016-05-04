@@ -2,9 +2,18 @@
  * This file defines console command logic.
  * @Author = Francisco Ortega
  */
- 
+
 module.exports = function(io, session) {
 var commands = {
+	// Handles changing player's nick
+	":Time": {
+		numArgs: 0,
+		handler: function(args, io, chatSession, user) {
+			// Will shoot off an error if the username has already been taken
+			// by someone.
+			console.log("Time!!");
+		}
+	},
 	// Handles changing player's nick
 	"nick": {
 		numArgs: 1,
@@ -295,7 +304,8 @@ var isCommand = function(msg) {
  */
 var run = function(user, msg) {
 	var cmd = msg.substring(1, msg.length);
-	var args = cmd.match(/[A-z][A-z][A-z]*/g);
+	var args = cmd.match(/[A-Za-z0-9.,:-][A-z][A-z]*/g);
+	console.log(args);
 	var fun = args.shift();
 
 	// Try catch in order to handle unknown/erroneous commands
