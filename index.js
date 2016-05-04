@@ -4,6 +4,8 @@
  *
  * This file handles the server's function in the chat program. The users never
  * actually interact with the server.
+ * 
+ * Chat Program #3
  */
 
 var express = require('express');
