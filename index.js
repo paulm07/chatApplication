@@ -15,7 +15,36 @@ var WebSocketServer = require('ws').Server;
 var wss = new WebSocketServer({port: 8181});
  /* End Web Socket Addition */
 
+/* Mongoose Addition */
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/chat');
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error'))
+db.once('open', function(){
+  console.log("--Mongoose successfully connected--");
+});
+/* End Mongoos Addition */
 
+
+/* Mongoose Scheme for Chat Messages */
+var chatMessageSchema = mongoose.Schema({
+  chatroom: String,
+  username: String,
+  message: String
+});
+
+/* Create the model for all chat messages */
+var chatMessage = mongoose.model('chatMessage', chatMessageSchema);
+
+// var aChatMessage = new chatMessage({
+//   chatroom: '##main',
+//   username: 'amind',
+//   message: 'hi!'
+// });
+//
+// aChatMessage.save(function (err, aChatMessage){
+//   if (err) return consol.error(err);
+// });
 
 var express = require('express');
 var app = express();
