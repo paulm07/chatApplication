@@ -15,6 +15,9 @@ var WebSocketServer = require('ws').Server;
 var wss = new WebSocketServer({port: 8181});
  /* End Web Socket Addition */
 
+
+
+
 /* Mongoose Addition */
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/chat');
@@ -23,7 +26,9 @@ db.on('error', console.error.bind(console, 'connection error'))
 db.once('open', function(){
   console.log("--Mongoose successfully connected--");
 });
-/* End Mongoos Addition */
+/* End Mongoose Addition */
+
+
 
 
 /* Mongoose Scheme for Chat Messages */
@@ -32,6 +37,9 @@ var chatMessageSchema = mongoose.Schema({
   username: String,
   message: String
 });
+
+
+
 
 /* Create the model for all chat messages */
 var chatMessage = mongoose.model('chatMessage', chatMessageSchema);
@@ -45,6 +53,11 @@ var chatMessage = mongoose.model('chatMessage', chatMessageSchema);
 // aChatMessage.save(function (err, aChatMessage){
 //   if (err) return consol.error(err);
 // });
+
+
+
+
+
 
 var express = require('express');
 var app = express();
@@ -61,22 +74,34 @@ http.listen(3000, function(){
   console.log('listening on *:3000');
 });
 
+
+
+
+
+/* LOGIC FOR WEB SERVICE, MONGO AND WEBSOCKET */
+
 wss.on('connection', function(ws) {
   console.log('client has connected');
   ws.on('message', function(message){
     console.log(message);
 
-    if(message == '\\:Time')
+    processedMessage = message.split(" ");
+
+    if(processedMessage[0] == '\\:Time')
     {
       ws.send("<b>The current time and date on the server is: " + Date() + "</b>");
       //console.log("Getting the message");
 
     }
-    else if(message == '\\:Weather')
+    else if(processedMessage[0] == '\\:Weather')
     {
 
     }
-    else if(message == '\\:Jemes')
+    else if(processedMessage[0] == '\\:Jemes')
+    {
+
+    }
+    else if(!commands.isCommand(message))
     {
 
     }
@@ -84,6 +109,7 @@ wss.on('connection', function(ws) {
   });
 });
 
+/* END LOGIC FOR WEB SERVICE, MONGO AND WEBSOCKET
 
 //Creating route to root dir REQUEST RESPONSE
 app.use(express.static(__dirname + '/public'));
