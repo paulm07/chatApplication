@@ -32,27 +32,27 @@ db.once('open', function(){
 
 
 /* Mongoose Scheme for Chat Messages */
-var chatMessageSchema = mongoose.Schema({
-  chatroom: String,
-  username: String,
-  message: String
+var chatLogSchema = mongoose.Schema({
+  channel: String,
+  log: String
 });
 
 
 
 
 /* Create the model for all chat messages */
-var chatMessage = mongoose.model('chatMessage', chatMessageSchema);
+var ChatLog = mongoose.model('chatLog', chatLogSchema, 'chatLog');
 
-// var aChatMessage = new chatMessage({
-//   chatroom: '##main',
-//   username: 'amind',
-//   message: 'hi!'
-// });
-//
-// aChatMessage.save(function (err, aChatMessage){
-//   if (err) return consol.error(err);
-// });
+
+
+var aChatLog = new ChatLog({
+  channel: 'main',
+  log: 'hi!'
+});
+
+aChatMessage.save(function (err, aChatLog){
+  if (err) return consol.error(err);
+});
 
 
 
@@ -109,7 +109,7 @@ wss.on('connection', function(ws) {
   });
 });
 
-/* END LOGIC FOR WEB SERVICE, MONGO AND WEBSOCKET
+/* END LOGIC FOR WEB SERVICE, MONGO AND WEBSOCKET */
 
 //Creating route to root dir REQUEST RESPONSE
 app.use(express.static(__dirname + '/public'));
@@ -123,7 +123,7 @@ app.get('/', function(req, res){
   socket.on('disconnect', function(){
     console.log('user disconnected');
   });
-});*/
+}); */
 
 
 
@@ -640,9 +640,21 @@ socket.on('send message', function(data){
         }
         else{
         io.to(chatSession.users[user].socket.id).emit('new message', {msg: data, nick: socket.nickname});
+        }
       }
-      }
+
+      var currentLog = "";
+
+      ChatMessage.findOne({ channel: currentChannel }, function (err, chatmessage) {
+        currentLog = currentChannel.log;
+      });
+
+      console.log(currentLog);
+
     }
+
+
+
     else {
       commands.run(chatSession.users[socket.nickname], data);
     }
