@@ -44,15 +44,16 @@ var chatLogSchema = mongoose.Schema({
 var ChatLog = mongoose.model('chatLog', chatLogSchema, 'chatLog');
 
 
+// Mongoose Testing
 
-var aChatLog = new ChatLog({
-  channel: 'main',
-  log: 'hi!'
-});
-
-aChatMessage.save(function (err, aChatLog){
-  if (err) return consol.error(err);
-});
+// var aChatLog = new ChatLog({
+//   channel: 'main',
+//   log: 'hi!'
+// });
+//
+// aChatLog.save(function (err, aChatLog){
+//   if (err) return console.error(err);
+// });
 
 
 
@@ -153,8 +154,8 @@ io.on('connection', function(socket){
 
     // Initilizes main system chat rooms once the first user logs in
     chatSession.channels["main"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##main</b> channel--</h3>\n"};
-    chatSession.channels["fiu"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##fiu</b> channel--</h3>\n"};
-    chatSession.channels["webappdevelopment"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##webappdevelopment</b> channel--</h3>\n"};
+    //chatSession.channels["fiu"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##fiu</b> channel--</h3>\n"};
+    //chatSession.channels["webappdevelopment"] = {accessLevel: 0, accessType: "public", accessList: ["sysOP"], currentUsers: {}, log: "<h3>--Welcome to the <b>##webappdevelopment</b> channel--</h3>\n"};
 
     // Initializes sysbot
     chatSession.users['sysbot'] = {
@@ -295,16 +296,46 @@ socket.on('createChannel', function(channelName){
   {
     var newChannelWelcomeMessage = "<h3>--Welcome to the <b>##"+ channelName + "</b> channel--</h3>\n";
     chatSession.channels[channelName] = {accessLevel: 0, accessType: "public", accessList: ["sysop", "smartbot", "sysbot", socket.nickname], currentUsers: {}, log: newChannelWelcomeMessage};
+
+    // Handles Creating chatlog for new channel
+    var aChatLog = new ChatLog({
+      channel: channelName,
+      log: ''
+    });
+
+    aChatLog.save(function (err, aChatLog){
+      if (err) return console.error(err);
+    });
   }
   else if(chatSession.users[socket.nickname].accessLevel == 1)
   {
     var newChannelWelcomeMessage = "<h3>--Welcome to the <b>##"+ channelName + "</b> channel--</h3>\n";
     chatSession.channels[channelName] = {accessLevel: 1, accessType: "public", accessList: ["sysop", "smartbot", "sysbot", socket.nickname], currentUsers: {}, log: newChannelWelcomeMessage};
+
+    // Handles Creating chatlog for new channel
+    var aChatLog = new ChatLog({
+      channel: channelName,
+      log: ''
+    });
+
+    aChatLog.save(function (err, aChatLog){
+      if (err) return console.error(err);
+    });
   }
   // Everyone can join this as it was created by a user
   else {
     var newChannelWelcomeMessage = "<h3>--Welcome to the <b>#"+ channelName + "</b> channel--</h3>\n";
     chatSession.channels[channelName] = {accessLevel: 2, accessType: "public", accessList: ["sysop", "smartbot", "sysbot", socket.nickname], currentUsers: {}, log: newChannelWelcomeMessage};
+
+    // Handles Creating chatlog for new channel
+    var aChatLog = new ChatLog({
+      channel: channelName,
+      log: ''
+    });
+
+    aChatLog.save(function (err, aChatLog){
+      if (err) return console.error(err);
+    });
   }
 
   // Switch Users Channel to the correct one once they create it
@@ -531,10 +562,41 @@ socket.on('deleteChannel', function(channelToDelete){
       //console.log(chatSession.channels[newChannelName].log);
 
       // Updates user's current chatlog to the correct one
-      io.to(chatSession.users[user].socket.id).emit('updateChatLog', chatSession.channels['main'].log);
+      //io.to(chatSession.users[user].socket.id).emit('updateChatLog', chatSession.channels['main'].log);
+
+      ChatLog.findOne({ channel: 'main' }, function (err, chatlog) {
+        io.to(chatSession.users[user].socket.id).emit('updateChatLog', chatlog.log);
+      });
     }
 
     // Ensures that everyone who was switched out of the current channel now has the correct channel list
+
+    // Updates database to ensure that log is properly sanitizedMessage
+    // Will update channel's chatlogs
+    ChatLog.findOne({ channel: currentChannel }, function (err, chatlog) {
+      // channel does not exist
+      if(chatlog === null)
+      {
+        // Handles Creating chatlog for new channel
+        var aChatLog = new ChatLog({
+          channel: currentChannel,
+          log: ''
+        });
+
+        aChatLog.save(function (err, aChatLog){
+          if (err) return console.error(err);
+        });
+      }
+      // channel actually exists
+      else {
+        chatlog.log = '';
+        chatlog.save();
+        //console.log(chatlog.log);
+      }
+
+    });
+
+
 
     // Actually deletes the channel from the list after all users have been transferred
     delete chatSession.channels[channelToDelete];
@@ -630,7 +692,7 @@ socket.on('send message', function(data){
 
       // Adds the current message to the log of the channel as it would be displayed by the user
       // This also takes care of making sure that the user send their chat message to the correct channel
-      chatSession.channels[currentChannel].log += '<b>' + socket.nickname + ': </b>' + data + '\n';
+      //chatSession.channels[currentChannel].log += '<b>' + socket.nickname + ': </b>' + data + '\n';
 
       // Make sure to handle messaging ONLY those people in this current channel though LOOP!
       for(user in chatSession.channels[chatSession.users[socket.nickname].currentChannel].currentUsers)
@@ -643,13 +705,40 @@ socket.on('send message', function(data){
         }
       }
 
+
+      // Holds current chat log for the current channel
       var currentLog = "";
 
-      ChatMessage.findOne({ channel: currentChannel }, function (err, chatmessage) {
-        currentLog = currentChannel.log;
+      var query = {channel: currentChannel};
+
+      // Will update channel's chatlogs
+      ChatLog.findOne({ channel: currentChannel }, function (err, chatlog) {
+        // channel does not exist
+        if(chatlog === null)
+        {
+          // Handles Creating chatlog for new channel
+          var aChatLog = new ChatLog({
+            channel: currentChannel,
+            log: ''
+          });
+
+          aChatLog.save(function (err, aChatLog){
+            if (err) return console.error(err);
+          });
+        }
+        // channel actually exists
+        else {
+          chatlog.log = chatlog.log + '<b>' + socket.nickname + ': </b>' + data + '\n';
+          chatlog.save();
+          //console.log(chatlog.log);
+        }
+
       });
 
-      console.log(currentLog);
+
+
+
+
 
     }
 
@@ -684,7 +773,14 @@ socket.on('switchUsersChannel', function(user, newChannelName){
   // Changes user's current channel to the new one
   chatSession.users[user].currentChannel = newChannelName;
   // Updates user's current chatlog to the correct one
-  io.to(chatSession.users[user].socket.id).emit('updateChatLog', chatSession.channels[newChannelName].log);
+  // io.to(chatSession.users[user].socket.id).emit('updateChatLog', chatSession.channels[newChannelName].log);
+
+  // Updates user's current chatlog to the correct one USING MONGODB!!
+  ChatLog.findOne({ channel: newChannelName }, function (err, chatlog) {
+    io.to(chatSession.users[user].socket.id).emit('updateChatLog', chatlog.log);
+  });
+
+
 });
 
 
@@ -703,7 +799,11 @@ socket.on('userLeftChannel', function(){
   // Changes user's current channel to the new one
   chatSession.users[socket.nickname].currentChannel = 'main';
   // Updates user's current chatlog to the correct one
-  io.to(chatSession.users[socket.nickname].socket.id).emit('updateChatLog', chatSession.channels['main'].log);
+  //io.to(chatSession.users[socket.nickname].socket.id).emit('updateChatLog', chatSession.channels['main'].log);
+  ChatLog.findOne({ channel: 'main' }, function (err, chatlog) {
+    io.to(chatSession.users[user].socket.id).emit('updateChatLog', chatlog.log);
+  });
+
 });
 
 /**
