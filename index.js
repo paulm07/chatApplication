@@ -114,7 +114,7 @@ wss.on('connection', function(ws) {
         }
         else {
           console.log(forecast);
-          ws.send("<b>Forcast for " + forecast[0].location.name +
+          ws.send("<b>Forecast for " + forecast[0].location.name +
           ": Temperature - " + forecast[0].current.temperature +
             "F, Current State - " + forecast[0].current.skytext +
           "</b>\n");
