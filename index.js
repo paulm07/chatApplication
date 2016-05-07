@@ -15,9 +15,6 @@ var WebSocketServer = require('ws').Server;
 var wss = new WebSocketServer({port: 8181});
  /* End Web Socket Addition */
 
-
-
-
 /* Mongoose Addition */
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/chat');
@@ -43,9 +40,7 @@ var chatLogSchema = mongoose.Schema({
   channel: String,
   log: String
 });
-
-
-
+/* Mongoose Scheme for Chat Messages */
 
 /* Create the model for all chat messages */
 var ChatLog = mongoose.model('chatLog', chatLogSchema, 'chatLog');
@@ -62,7 +57,7 @@ var ChatLog = mongoose.model('chatLog', chatLogSchema, 'chatLog');
 //   if (err) return console.error(err);
 // });
 
-
+// End Mongoose Testing
 
 
 
@@ -81,9 +76,6 @@ nicknames = [];
 http.listen(3000, function(){
   console.log('listening on *:3000');
 });
-
-
-
 
 
 /* LOGIC FOR WEB SERVICE, MONGO AND WEBSOCKET */
@@ -732,7 +724,6 @@ socket.on('send message', function(data){
         }
       }
 
-
       // Holds current chat log for the current channel
       var currentLog = "";
 
@@ -762,14 +753,7 @@ socket.on('send message', function(data){
 
       });
 
-
-
-
-
-
     }
-
-
 
     else {
       commands.run(chatSession.users[socket.nickname], data);
@@ -827,6 +811,8 @@ socket.on('userLeftChannel', function(){
   chatSession.users[socket.nickname].currentChannel = 'main';
   // Updates user's current chatlog to the correct one
   //io.to(chatSession.users[socket.nickname].socket.id).emit('updateChatLog', chatSession.channels['main'].log);
+
+  // MONGOOSE/MONGODB ADDITION
   ChatLog.findOne({ channel: 'main' }, function (err, chatlog) {
     io.to(chatSession.users[user].socket.id).emit('updateChatLog', chatlog.log);
   });
