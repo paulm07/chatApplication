@@ -28,7 +28,14 @@ db.once('open', function(){
 });
 /* End Mongoose Addition */
 
+/* Weather Service Addition */
+var weather = require('weather-js');
 
+weather.find({search: 'San Francisco, CA', degreeType: 'F'}, function(err, result) {
+  if(err) console.log(err);
+
+  console.log(JSON.stringify(result, null, 2));
+});
 
 
 /* Mongoose Scheme for Chat Messages */
@@ -96,6 +103,26 @@ wss.on('connection', function(ws) {
     }
     else if(processedMessage[0] == '\\:Weather')
     {
+      var cityToLookFor = processedMessage[1];
+      console.log(cityToLookFor);
+
+      weather.find({search: cityToLookFor, degreeType: 'F'}, function(err, forecast) {
+        if(err)
+        {
+          console.log(err);
+          ws.send("<b>Error ProcessingCity</b>\n");
+        }
+        else {
+          console.log(forecast);
+          ws.send("<b>Forcast for " + forecast[0].location.name +
+          ": Temperature - " + forecast[0].current.temperature +
+            "F, Current State - " + forecast[0].current.skytext +
+          "</b>\n");
+        }
+
+
+        //console.log(JSON.stringify(result, null, 2));
+      });
 
     }
     else if(processedMessage[0] == '\\:Jemes')
